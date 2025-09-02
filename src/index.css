@@ -2,6 +2,112 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* Dark theme colors - College tech aesthetic */
+    --background: 220 13% 9%;
+    --foreground: 220 9% 95%;
+    
+    --card: 220 13% 11%;
+    --card-foreground: 220 9% 95%;
+    
+    --popover: 220 13% 11%;
+    --popover-foreground: 220 9% 95%;
+    
+    --primary: 266 83% 58%;
+    --primary-foreground: 220 9% 95%;
+    --primary-glow: 266 83% 68%;
+    
+    --secondary: 220 13% 16%;
+    --secondary-foreground: 220 9% 95%;
+    
+    --muted: 220 13% 16%;
+    --muted-foreground: 220 9% 60%;
+    
+    --accent: 220 13% 18%;
+    --accent-foreground: 220 9% 95%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 220 9% 95%;
+    
+    --border: 220 13% 18%;
+    --input: 220 13% 18%;
+    --ring: 266 83% 58%;
+    
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --info: 199 89% 48%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(266 83% 58%), hsl(266 83% 68%));
+    --gradient-card: linear-gradient(145deg, hsl(220 13% 11%), hsl(220 13% 13%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 13% 9%) 0%, hsl(266 83% 58% / 0.1) 100%);
+    
+    /* Shadows */
+    --shadow-glow: 0 0 40px hsl(266 83% 58% / 0.3);
+    --shadow-card: 0 8px 32px hsl(220 13% 5% / 0.5);
+    --shadow-elevated: 0 16px 64px hsl(220 13% 5% / 0.7);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-inter;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+}
+
+@layer components {
+  /* Glassmorphism effect */
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+  
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent;
+  }
+  
+  /* Interactive elements */
+  .interactive {
+    @apply transition-all duration-300 hover:scale-105 active:scale-95;
+  }
+  
+  /* Glow effect */
+  .glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  /* Card styles */
+  .card-elevated {
+    @apply bg-gradient-to-br from-card to-card/80 border border-border/50;
+    box-shadow: var(--shadow-card);
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
