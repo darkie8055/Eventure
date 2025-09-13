@@ -12,6 +12,7 @@ import CommunityDashboard from "./pages/CommunityDashboard";
 import Communities from "./pages/Communities";
 import CommunityChat from "./pages/CommunityChat";
 import CreateEvent from "./pages/CreateEvent";
+import Bookmarks from "./pages/Bookmarks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/communities" element={<Communities />} />
           <Route path="/community/:id/chat" element={<CommunityChat />} />
           <Route path="/create-event" element={<CreateEvent />} />
+          <Route path="/bookmarks" element={<Bookmarks />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

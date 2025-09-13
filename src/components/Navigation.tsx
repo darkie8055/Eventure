@@ -30,7 +30,9 @@ export function Navigation({ user }: NavigationProps) {
 
   const navItems = [
     { path: '/events', label: 'Events', icon: Calendar },
+    { path: '/communities', label: 'Communities', icon: Home },
     { path: '/bookmarks', label: 'Bookmarks', icon: BookmarkIcon },
+    { path: user?.role === 'student' ? '/dashboard' : '/community-dashboard', label: 'Dashboard', icon: Settings },
   ];
 
   const isActivePath = (path: string) => location.pathname === path;
@@ -70,9 +72,11 @@ export function Navigation({ user }: NavigationProps) {
                 })}
                 
                 {user.role === 'community_lead' && (
-                  <Button size="sm" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Create Event
+                  <Button size="sm" className="gap-2" asChild>
+                    <Link to="/create-event">
+                      <Plus className="h-4 w-4" />
+                      Create Event
+                    </Link>
                   </Button>
                 )}
                 
@@ -148,9 +152,11 @@ export function Navigation({ user }: NavigationProps) {
                   })}
                   
                   {user.role === 'community_lead' && (
-                    <Button className="mx-4 gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Plus className="h-4 w-4" />
-                      Create Event
+                    <Button className="mx-4 gap-2" asChild>
+                      <Link to="/create-event" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Plus className="h-4 w-4" />
+                        Create Event
+                      </Link>
                     </Button>
                   )}
                   
