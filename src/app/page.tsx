@@ -16,7 +16,7 @@ import {
   ArrowRight,
   CheckCircle2
 } from 'lucide-react';
-import { Navigation } from '@/components/Navigation';
+import { Navigation } from '@/components/layout/Navigation';
 
 export default function Home() {
   return (
@@ -437,8 +437,7 @@ export default function Home() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="/events" className="hover:text-foreground transition-colors">Browse Events</Link></li>
                 <li><Link href="/communities" className="hover:text-foreground transition-colors">Communities</Link></li>
-                <li><Link href="/create-event" className="hover:text-foreground transition-colors">Create Event</Link></li>
-                <li><Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link></li>
+                <li><Link href="/login" className="hover:text-foreground transition-colors">Get Started</Link></li>
               </ul>
             </div>
             
