@@ -14,6 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, EyeOff, Mail, Lock, User, Phone, Building } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 const studentSignupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -102,16 +105,24 @@ export function SignupForm({ onSignup }: SignupFormProps) {
   const handleStudentSubmit = async (data: StudentSignupData) => {
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Firebase Auth sign up
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      // Store user profile in Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        ...data,
+        role: 'student',
+        uid: userCredential.user.uid,
+        createdAt: new Date().toISOString(),
+      });
       onSignup?.(data, 'student');
       toast({
         title: "Account created successfully!",
         description: "Welcome to Eventure. You can now explore and register for events.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Signup failed",
-        description: "Please try again.",
+        description: error.message || "Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -122,16 +133,24 @@ export function SignupForm({ onSignup }: SignupFormProps) {
   const handleLeadSubmit = async (data: CommunityLeadSignupData) => {
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Firebase Auth sign up
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      // Store user profile in Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        ...data,
+        role: 'community_lead',
+        uid: userCredential.user.uid,
+        createdAt: new Date().toISOString(),
+      });
       onSignup?.(data, 'community_lead');
       toast({
         title: "Community Lead application submitted!",
         description: "Your application is under review. You'll receive an email once approved.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Signup failed",
-        description: "Please try again.",
+        description: error.message || "Please try again.",
         variant: "destructive",
       });
     } finally {
