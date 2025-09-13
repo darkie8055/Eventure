@@ -1,83 +1,100 @@
-# Eventure - Student Event & Community Platform
+# Eventure - College Event Management Platform
 
-## Project info
+## Overview
 
-**URL**: https://lovable.dev/projects/12f5fb87-0921-4b67-b246-6b01f8eaee37
+Eventure is a comprehensive Next.js-based platform designed to help students discover events, join communities, and build meaningful connections within their academic environment. The platform provides a complete event management ecosystem for colleges and universities.
 
-## About Eventure
+## 🚀 Features
 
-Eventure is a Next.js-based platform designed to help students discover events, join communities, and build meaningful connections within their academic environment. The platform features:
+- **Event Discovery & Management**: Browse, create, and manage college events
+- **Community Groups**: Join communities and participate in group discussions
+- **Real-time Chat**: Community chat with channels and messaging
+- **Student Profiles**: Comprehensive profile system with achievements and activity tracking
+- **Community Verification**: Multi-step verification process for community leaders
+- **Notification System**: Real-time notifications with filtering and management
+- **Admin Dashboard**: Complete administrative controls and analytics
+- **Event Engagement**: Comments, likes, sharing, and event interactions
+- **Mobile Responsive**: Modern UI with full mobile responsiveness
 
-- Event discovery and management
-- Community groups and chat functionality  
-- Student dashboard and bookmarks
-- Real-time notifications and messaging
-- Responsive design with modern UI components
+## 🛠️ Tech Stack
 
-## How can I edit this code?
+- **Framework**: Next.js 15.5.3 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Radix UI + shadcn/ui
+- **Forms**: React Hook Form with Zod validation
+- **Icons**: Lucide React
+- **Authentication**: Role-based access (Students & Community Leaders)
 
-There are several ways of editing your application.
+## 📋 Getting Started
 
-**Use Lovable**
+### Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/12f5fb87-0921-4b67-b246-6b01f8eaee37) and start prompting.
+- Node.js 18+ 
+- npm or yarn
 
-Changes made via Lovable will be committed automatically to this repo.
+### Installation
 
-**Use your preferred IDE**
+1. Clone the repository:
+```bash
+git clone https://github.com/REPO-BUILDERS/eventure-web.git
+cd eventure-web
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. Install dependencies:
+```bash
+npm install
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Run the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Available Scripts
 
-**Use GitHub Codespaces**
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🏗️ Project Structure
 
-## What technologies are used for this project?
+```
+src/
+├── app/                 # Next.js App Router pages
+├── components/          # Reusable React components
+│   ├── ui/             # shadcn/ui components
+│   └── ...             # Custom components
+├── hooks/              # Custom React hooks
+└── lib/                # Utility functions
+```
 
-This project is built with:
+## 🎯 Key Features Implemented
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- ✅ Complete student and community leader profile systems
+- ✅ Multi-step community verification process
+- ✅ Event creation with advanced settings and policies
+- ✅ Real-time notification system with bell component
+- ✅ Community chat with channels and messaging
+- ✅ Event engagement (comments, likes, sharing)
+- ✅ Admin dashboard with analytics and management
+- ✅ Mobile-responsive design throughout
 
-## How can I deploy this project?
+## 🤝 Contributing
 
-Simply open [Lovable](https://lovable.dev/projects/12f5fb87-0921-4b67-b246-6b01f8eaee37) and click on Share -> Publish.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Can I connect a custom domain to my Lovable project?
+## 📝 License
 
-Yes, you can!
+This project is licensed under the MIT License.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 📧 Contact
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+For questions or support, please open an issue on GitHub.
