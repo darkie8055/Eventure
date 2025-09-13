@@ -1,8 +1,18 @@
-# Welcome to your Lovable project
+# Eventure - Student Event & Community Platform
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/12f5fb87-0921-4b67-b246-6b01f8eaee37
+
+## About Eventure
+
+Eventure is a Next.js-based platform designed to help students discover events, join communities, and build meaningful connections within their academic environment. The platform features:
+
+- Event discovery and management
+- Community groups and chat functionality  
+- Student dashboard and bookmarks
+- Real-time notifications and messaging
+- Responsive design with modern UI components
 
 ## How can I edit this code?
 

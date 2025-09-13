@@ -1,8 +1,12 @@
+'use client'
+
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { NotificationBell } from '@/components/NotificationBell';
 import { 
   Calendar, 
   Home, 
@@ -26,7 +30,7 @@ interface NavigationProps {
 
 export function Navigation({ user }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const location = useLocation();
+  const pathname = usePathname();
 
   const navItems = [
     { path: '/events', label: 'Events', icon: Calendar },
@@ -35,14 +39,14 @@ export function Navigation({ user }: NavigationProps) {
     { path: user?.role === 'student' ? '/dashboard' : '/community-dashboard', label: 'Dashboard', icon: Settings },
   ];
 
-  const isActivePath = (path: string) => location.pathname === path;
+  const isActivePath = (path: string) => pathname === path;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-glow">
               <span className="text-sm font-bold text-primary-foreground">E</span>
             </div>
@@ -58,7 +62,7 @@ export function Navigation({ user }: NavigationProps) {
                   return (
                     <Link
                       key={item.path}
-                      to={item.path}
+                      href={item.path}
                       className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                         isActivePath(item.path)
                           ? 'bg-primary/10 text-primary'
@@ -73,17 +77,14 @@ export function Navigation({ user }: NavigationProps) {
                 
                 {user.role === 'community_lead' && (
                   <Button size="sm" className="gap-2" asChild>
-                    <Link to="/create-event">
+                    <Link href="/create-event">
                       <Plus className="h-4 w-4" />
                       Create Event
                     </Link>
                   </Button>
                 )}
                 
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
-                </Button>
+                <NotificationBell />
               </>
             )}
           </div>
@@ -106,10 +107,10 @@ export function Navigation({ user }: NavigationProps) {
             ) : (
               <div className="hidden md:flex items-center space-x-2">
                 <Button variant="ghost" asChild>
-                  <Link to="/login">Login</Link>
+                  <Link href="/login">Login</Link>
                 </Button>
                 <Button asChild>
-                  <Link to="/signup">Sign Up</Link>
+                  <Link href="/signup">Sign Up</Link>
                 </Button>
               </div>
             )}
@@ -137,7 +138,7 @@ export function Navigation({ user }: NavigationProps) {
                     return (
                       <Link
                         key={item.path}
-                        to={item.path}
+                        href={item.path}
                         className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
                           isActivePath(item.path)
                             ? 'bg-primary/10 text-primary'
@@ -153,7 +154,7 @@ export function Navigation({ user }: NavigationProps) {
                   
                   {user.role === 'community_lead' && (
                     <Button className="mx-4 gap-2" asChild>
-                      <Link to="/create-event" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Link href="/create-event" onClick={() => setIsMobileMenuOpen(false)}>
                         <Plus className="h-4 w-4" />
                         Create Event
                       </Link>
@@ -182,12 +183,12 @@ export function Navigation({ user }: NavigationProps) {
               ) : (
                 <div className="px-4 space-y-2">
                   <Button variant="ghost" className="w-full justify-start" asChild>
-                    <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                       Login
                     </Link>
                   </Button>
                   <Button className="w-full" asChild>
-                    <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
                       Sign Up
                     </Link>
                   </Button>

@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useRef, useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -92,7 +94,7 @@ const mockOnlineMembers = [
   { id: '5', name: 'Rahul Kumar', avatar: '/placeholder.svg', role: 'Student', status: 'away' }
 ];
 
-const CommunityChat = () => {
+export default function CommunityChat({ params }: { params: { id: string } }) {
   const [selectedChannel, setSelectedChannel] = useState(mockChannels[0]);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState(mockMessages);
@@ -326,4 +328,4 @@ const CommunityChat = () => {
   );
 };
 
-export default CommunityChat;
+// Remove the duplicate export - using the function export above

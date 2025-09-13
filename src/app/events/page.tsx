@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { EventCard } from '@/components/EventCard';

@@ -1,8 +1,10 @@
+"use client"
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -137,7 +139,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                   <span>Remember me</span>
                 </Label>
                 <Link
-                  to="/forgot-password"
+                  href="/forgot-password"
                   className="text-sm text-primary hover:text-primary-glow transition-colors"
                 >
                   Forgot password?
@@ -158,7 +160,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
             <p className="text-sm text-muted-foreground">
               Don't have an account?{' '}
               <Link
-                to="/signup"
+                href="/signup"
                 className="text-primary hover:text-primary-glow transition-colors font-medium"
               >
                 Sign up

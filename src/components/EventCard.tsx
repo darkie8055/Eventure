@@ -1,8 +1,11 @@
+"use client"
+
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Calendar, 
   MapPin, 
@@ -11,9 +14,13 @@ import {
   Share2, 
   ExternalLink,
   Clock,
-  Bookmark
+  Bookmark,
+  Eye,
+  MessageSquare
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import Link from 'next/link';
+import Image from 'next/image';
 
 interface Event {
   id: string;
@@ -46,6 +53,7 @@ interface EventCardProps {
 export function EventCard({ event, onBookmark, onRegister, onShare }: EventCardProps) {
   const [isBookmarked, setIsBookmarked] = useState(event.isBookmarked || false);
   const [isRegistered, setIsRegistered] = useState(event.isRegistered || false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   const handleBookmark = () => {
     setIsBookmarked(!isBookmarked);
@@ -70,12 +78,34 @@ export function EventCard({ event, onBookmark, onRegister, onShare }: EventCardP
   };
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.origin + `/event/${event.id}`);
+    setShowShareDialog(true);
+  };
+
+  const shareEvent = (platform: string) => {
+    const url = `${window.location.origin}/events/${event.id}`;
+    const text = `Check out this amazing event: ${event.title}`;
+    
+    switch (platform) {
+      case 'twitter':
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+        break;
+      case 'facebook':
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+        break;
+      case 'linkedin':
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`);
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(url);
+        toast({
+          title: "Link copied!",
+          description: "Event link has been copied to your clipboard"
+        });
+        break;
+    }
+    
     onShare?.(event.id);
-    toast({
-      title: "Link copied!",
-      description: "Event link has been copied to clipboard.",
-    });
+    setShowShareDialog(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -92,9 +122,11 @@ export function EventCard({ event, onBookmark, onRegister, onShare }: EventCardP
       {/* Event Poster */}
       {event.poster && (
         <div className="relative h-48 overflow-hidden">
-          <img 
+          <Image 
             src={event.poster} 
             alt={event.title}
+            width={400}
+            height={192}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
@@ -117,7 +149,7 @@ export function EventCard({ event, onBookmark, onRegister, onShare }: EventCardP
               size="sm"
               variant="secondary"
               className="h-8 w-8 p-0 glass"
-              onClick={handleShare}
+              onClick={() => setShowShareDialog(true)}
             >
               <Share2 className="h-4 w-4" />
             </Button>
@@ -188,27 +220,65 @@ export function EventCard({ event, onBookmark, onRegister, onShare }: EventCardP
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-2">
-          {isRegistered ? (
-            <Button disabled className="flex-1 gap-2">
-              <Users className="h-4 w-4" />
-              Registered
-            </Button>
-          ) : (
-            <Button onClick={handleRegister} className="flex-1 gap-2">
-              {event.registrationLink ? (
-                <>
-                  <ExternalLink className="h-4 w-4" />
-                  Register
-                </>
-              ) : (
-                <>
-                  <Users className="h-4 w-4" />
-                  Register
-                </>
-              )}
-            </Button>
-          )}
+        <div className="flex flex-col space-y-2">
+          <div className="flex space-x-2">
+            {isRegistered ? (
+              <Button disabled className="flex-1 gap-2">
+                <Users className="h-4 w-4" />
+                Registered
+              </Button>
+            ) : (
+              <Button onClick={handleRegister} className="flex-1 gap-2">
+                {event.registrationLink ? (
+                  <>
+                    <ExternalLink className="h-4 w-4" />
+                    Register
+                  </>
+                ) : (
+                  <>
+                    <Users className="h-4 w-4" />
+                    Register
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex space-x-2">
+            <Link href={`/events/${event.id}`} className="flex-1">
+              <Button variant="outline" className="w-full gap-2">
+                <Eye className="h-4 w-4" />
+                View Details
+              </Button>
+            </Link>
+            
+            <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Share Event</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button onClick={() => shareEvent('twitter')} className="gap-2">
+                    Share on Twitter
+                  </Button>
+                  <Button onClick={() => shareEvent('facebook')} className="gap-2">
+                    Share on Facebook
+                  </Button>
+                  <Button onClick={() => shareEvent('linkedin')} className="gap-2">
+                    Share on LinkedIn
+                  </Button>
+                  <Button onClick={() => shareEvent('copy')} variant="outline" className="gap-2">
+                    Copy Link
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
     </Card>

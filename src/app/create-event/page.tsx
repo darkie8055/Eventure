@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,11 +27,26 @@ const CreateEvent = () => {
     description: '',
     date: '',
     time: '',
+    endTime: '',
     location: '',
     registrationLink: '',
     maxParticipants: '',
     tags: [] as string[],
-    poster: null as File | null
+    poster: null as File | null,
+    category: '',
+    eventType: 'in-person',
+    requiresApproval: false,
+    isPrivate: false,
+    allowWaitlist: true,
+    sendReminders: true,
+    collectFeedback: true,
+    prerequisites: '',
+    agenda: '',
+    contactEmail: mockUser.email,
+    contactPhone: '',
+    registrationDeadline: '',
+    cancellationPolicy: '',
+    refundPolicy: 'no-refund'
   });
   const [newTag, setNewTag] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,11 +119,26 @@ const CreateEvent = () => {
         description: '',
         date: '',
         time: '',
+        endTime: '',
         location: '',
         registrationLink: '',
         maxParticipants: '',
-        tags: [],
-        poster: null
+        tags: [] as string[],
+        poster: null as File | null,
+        category: '',
+        eventType: 'in-person',
+        requiresApproval: false,
+        isPrivate: false,
+        allowWaitlist: true,
+        sendReminders: true,
+        collectFeedback: true,
+        prerequisites: '',
+        agenda: '',
+        contactEmail: mockUser.email,
+        contactPhone: '',
+        registrationDeadline: '',
+        cancellationPolicy: '',
+        refundPolicy: 'no-refund'
       });
     } catch (error) {
       toast({
@@ -231,7 +263,7 @@ const CreateEvent = () => {
                   onChange={(e) => handleInputChange('registrationLink', e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Leave empty to use Eventure's built-in registration system
+                  Leave empty to use Eventure&apos;s built-in registration system
                 </p>
               </div>
 
@@ -365,6 +397,229 @@ const CreateEvent = () => {
                     </Badge>
                   ))}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Advanced Event Settings */}
+          <Card className="card-elevated">
+            <CardHeader>
+              <CardTitle>Advanced Settings</CardTitle>
+              <CardDescription>
+                Configure additional event options and requirements
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="eventType">Event Type</Label>
+                  <select 
+                    id="eventType"
+                    value={formData.eventType}
+                    onChange={(e) => handleInputChange('eventType', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="in-person">In-Person</option>
+                    <option value="online">Online</option>
+                    <option value="hybrid">Hybrid</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <select 
+                    id="category"
+                    value={formData.category}
+                    onChange={(e) => handleInputChange('category', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="">Select Category</option>
+                    <option value="technical">Technical</option>
+                    <option value="cultural">Cultural</option>
+                    <option value="academic">Academic</option>
+                    <option value="sports">Sports</option>
+                    <option value="social">Social</option>
+                    <option value="professional">Professional Development</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">End Time</Label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="endTime"
+                      type="time"
+                      value={formData.endTime}
+                      onChange={(e) => handleInputChange('endTime', e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="registrationDeadline">Registration Deadline</Label>
+                  <Input
+                    id="registrationDeadline"
+                    type="date"
+                    value={formData.registrationDeadline}
+                    onChange={(e) => handleInputChange('registrationDeadline', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="requiresApproval"
+                    checked={formData.requiresApproval}
+                    onChange={(e) => setFormData(prev => ({ ...prev, requiresApproval: e.target.checked }))}
+                    className="rounded"
+                  />
+                  <Label htmlFor="requiresApproval">Require manual approval for registrations</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="allowWaitlist"
+                    checked={formData.allowWaitlist}
+                    onChange={(e) => setFormData(prev => ({ ...prev, allowWaitlist: e.target.checked }))}
+                    className="rounded"
+                  />
+                  <Label htmlFor="allowWaitlist">Enable waitlist when event is full</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="sendReminders"
+                    checked={formData.sendReminders}
+                    onChange={(e) => setFormData(prev => ({ ...prev, sendReminders: e.target.checked }))}
+                    className="rounded"
+                  />
+                  <Label htmlFor="sendReminders">Send automatic reminders to registered participants</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="collectFeedback"
+                    checked={formData.collectFeedback}
+                    onChange={(e) => setFormData(prev => ({ ...prev, collectFeedback: e.target.checked }))}
+                    className="rounded"
+                  />
+                  <Label htmlFor="collectFeedback">Collect feedback after event completion</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isPrivate"
+                    checked={formData.isPrivate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, isPrivate: e.target.checked }))}
+                    className="rounded"
+                  />
+                  <Label htmlFor="isPrivate">Make this a private event (invitation only)</Label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Event Content & Requirements */}
+          <Card className="card-elevated">
+            <CardHeader>
+              <CardTitle>Event Content & Requirements</CardTitle>
+              <CardDescription>
+                Provide detailed information about your event
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="agenda">Event Agenda (Optional)</Label>
+                <Textarea
+                  id="agenda"
+                  placeholder="e.g., 
+10:00 AM - Registration & Welcome
+10:30 AM - Opening Presentation
+11:30 AM - Hands-on Workshop
+12:30 PM - Lunch Break
+..."
+                  value={formData.agenda}
+                  onChange={(e) => handleInputChange('agenda', e.target.value)}
+                  rows={6}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="prerequisites">Prerequisites (Optional)</Label>
+                <Textarea
+                  id="prerequisites"
+                  placeholder="List any skills, knowledge, or items participants should have/bring..."
+                  value={formData.prerequisites}
+                  onChange={(e) => handleInputChange('prerequisites', e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact & Policies */}
+          <Card className="card-elevated">
+            <CardHeader>
+              <CardTitle>Contact Information & Policies</CardTitle>
+              <CardDescription>
+                Provide contact details and event policies
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="contactEmail">Contact Email</Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={formData.contactEmail}
+                    onChange={(e) => handleInputChange('contactEmail', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contactPhone">Contact Phone (Optional)</Label>
+                  <Input
+                    id="contactPhone"
+                    value={formData.contactPhone}
+                    onChange={(e) => handleInputChange('contactPhone', e.target.value)}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cancellationPolicy">Cancellation Policy (Optional)</Label>
+                <Textarea
+                  id="cancellationPolicy"
+                  placeholder="Describe your event cancellation and rescheduling policy..."
+                  value={formData.cancellationPolicy}
+                  onChange={(e) => handleInputChange('cancellationPolicy', e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="refundPolicy">Refund Policy</Label>
+                <select 
+                  id="refundPolicy"
+                  value={formData.refundPolicy}
+                  onChange={(e) => handleInputChange('refundPolicy', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="no-refund">No Refunds</option>
+                  <option value="full-refund">Full Refund Available</option>
+                  <option value="partial-refund">Partial Refund Available</option>
+                  <option value="credit-only">Credit/Transfer Only</option>
+                </select>
               </div>
             </CardContent>
           </Card>

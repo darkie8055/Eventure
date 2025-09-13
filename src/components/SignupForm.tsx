@@ -1,8 +1,10 @@
+"use client"
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -511,7 +513,7 @@ export function SignupForm({ onSignup }: SignupFormProps) {
             <p className="text-sm text-muted-foreground">
               Already have an account?{' '}
               <Link
-                to="/login"
+                href="/login"
                 className="text-primary hover:text-primary-glow transition-colors font-medium"
               >
                 Sign in
