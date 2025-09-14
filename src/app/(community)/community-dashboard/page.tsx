@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Navigation } from '@/components/layout/Navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -92,9 +93,11 @@ const CommunityDashboard = () => {
           </div>
           
           <div className="flex items-center gap-4 mt-4 md:mt-0">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create Event
+            <Button className="gap-2" asChild>
+              <Link href="/events/create">
+                <Plus className="h-4 w-4" />
+                Create Event
+              </Link>
             </Button>
             <Avatar className="h-12 w-12">
               <AvatarImage src={mockUser.avatar} alt={mockUser.name} />

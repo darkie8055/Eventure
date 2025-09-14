@@ -32,12 +32,16 @@ export function Navigation({ user }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  const navItems = [
-    { path: '/events', label: 'Events', icon: Calendar },
-    { path: '/communities', label: 'Communities', icon: Home },
-    { path: '/bookmarks', label: 'Bookmarks', icon: BookmarkIcon },
-    { path: user?.role === 'student' ? '/student-dashboard' : '/community-dashboard', label: 'Dashboard', icon: Settings },
-  ];
+  const navItems = user?.role === 'community_lead' 
+    ? [
+        { path: '/community-dashboard', label: 'Dashboard', icon: Settings },
+      ]
+    : [
+        { path: '/events', label: 'Events', icon: Calendar },
+        { path: '/communities', label: 'Communities', icon: Home },
+        { path: '/bookmarks', label: 'Bookmarks', icon: BookmarkIcon },
+        { path: '/student-dashboard', label: 'Dashboard', icon: Settings },
+      ];
 
   const isActivePath = (path: string) => pathname === path;
 
@@ -74,15 +78,6 @@ export function Navigation({ user }: NavigationProps) {
                     </Link>
                   );
                 })}
-                
-                {user.role === 'community_lead' && (
-                  <Button size="sm" className="gap-2" asChild>
-                    <Link href="/create-event">
-                      <Plus className="h-4 w-4" />
-                      Create Event
-                    </Link>
-                  </Button>
-                )}
                 
                 <NotificationBell />
               </>

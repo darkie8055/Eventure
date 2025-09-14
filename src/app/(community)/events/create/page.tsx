@@ -8,8 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar as CalendarIcon, Clock, MapPin, Upload, Plus, X, Tag, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { db } from '@/lib/firebase';
+import { collection, addDoc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Mock community lead data
 const mockUser = {
@@ -93,26 +97,57 @@ const CreateEvent = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Validation
-    if (!formData.title || !formData.description || !formData.date || !formData.time || !formData.location) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Validate required fields
+      if (!formData.title || !formData.description || !formData.date || !formData.time || !formData.location) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      let posterUrl = '';
+      
+      // Upload poster to Firebase Storage if provided
+      if (formData.poster) {
+        try {
+          const storage = getStorage();
+          const posterRef = ref(storage, `event-posters/${Date.now()}-${formData.poster.name}`);
+          await uploadBytes(posterRef, formData.poster);
+          posterUrl = await getDownloadURL(posterRef);
+        } catch (uploadError) {
+          console.error('Error uploading poster:', uploadError);
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload poster. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      // Create event data with poster URL instead of File object
+      const eventData = {
+        ...formData,
+        poster: posterUrl, // Store the download URL instead of File object
+        createdBy: mockUser.name,
+        createdByEmail: mockUser.email,
+        community: mockUser.community,
+        createdAt: new Date().toISOString(),
+        status: 'published',
+        registrations: 0,
+      };
+
+      // Save to Firestore
+      await addDoc(collection(db, 'events'), eventData);
       
       toast({
-        title: "Event Created Successfully!",
-        description: "Your event has been created and is now visible to students",
+        title: "Event Created!",
+        description: "Your event has been successfully created and published.",
       });
-
+      
       // Reset form
       setFormData({
         title: '',
@@ -123,8 +158,8 @@ const CreateEvent = () => {
         location: '',
         registrationLink: '',
         maxParticipants: '',
-        tags: [] as string[],
-        poster: null as File | null,
+        tags: [],
+        poster: null,
         category: '',
         eventType: 'in-person',
         requiresApproval: false,
@@ -140,11 +175,12 @@ const CreateEvent = () => {
         cancellationPolicy: '',
         refundPolicy: 'no-refund'
       });
-    } catch (error) {
+      
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to create event. Please try again.",
-        variant: "destructive"
+        description: error.message || "Failed to create event. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -413,34 +449,33 @@ const CreateEvent = () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="eventType">Event Type</Label>
-                  <select 
-                    id="eventType"
-                    value={formData.eventType}
-                    onChange={(e) => handleInputChange('eventType', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="in-person">In-Person</option>
-                    <option value="online">Online</option>
-                    <option value="hybrid">Hybrid</option>
-                  </select>
+                  <Select value={formData.eventType} onValueChange={(value) => handleInputChange('eventType', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select event type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="in-person">In-Person</SelectItem>
+                      <SelectItem value="online">Online</SelectItem>
+                      <SelectItem value="hybrid">Hybrid</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <select 
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) => handleInputChange('category', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="">Select Category</option>
-                    <option value="technical">Technical</option>
-                    <option value="cultural">Cultural</option>
-                    <option value="academic">Academic</option>
-                    <option value="sports">Sports</option>
-                    <option value="social">Social</option>
-                    <option value="professional">Professional Development</option>
-                  </select>
+                  <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="cultural">Cultural</SelectItem>
+                      <SelectItem value="academic">Academic</SelectItem>
+                      <SelectItem value="sports">Sports</SelectItem>
+                      <SelectItem value="social">Social</SelectItem>
+                      <SelectItem value="professional">Professional Development</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -609,17 +644,17 @@ const CreateEvent = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="refundPolicy">Refund Policy</Label>
-                <select 
-                  id="refundPolicy"
-                  value={formData.refundPolicy}
-                  onChange={(e) => handleInputChange('refundPolicy', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="no-refund">No Refunds</option>
-                  <option value="full-refund">Full Refund Available</option>
-                  <option value="partial-refund">Partial Refund Available</option>
-                  <option value="credit-only">Credit/Transfer Only</option>
-                </select>
+                <Select value={formData.refundPolicy} onValueChange={(value) => handleInputChange('refundPolicy', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select refund policy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no-refund">No Refunds</SelectItem>
+                    <SelectItem value="full-refund">Full Refund Available</SelectItem>
+                    <SelectItem value="partial-refund">Partial Refund Available</SelectItem>
+                    <SelectItem value="credit-only">Credit/Transfer Only</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

@@ -1,17 +1,19 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigation } from '@/components/layout/Navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { EventCard } from '@/components/events/EventCard';
+import { useToast } from '@/hooks/use-toast';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { 
   Calendar, 
   Users, 
@@ -22,477 +24,290 @@ import {
   Mail,
   Phone,
   GraduationCap,
-  Trophy,
-  Star,
-  Clock,
   Save,
-  Camera,
-  Shield,
-  Bell,
-  Eye,
-  EyeOff,
   User
 } from 'lucide-react';
 
-// Mock user data - this would come from authentication context
-const mockUser = {
-  id: '1',
-  name: 'Alex Johnson',
-  email: 'alex.johnson@geci.ac.in',
-  phone: '+91 9876543210',
-  role: 'student' as const,
-  avatar: '/placeholder.svg',
-  college: 'Government Engineering College Idukki',
-  department: 'Computer Science & Engineering',
-  year: '3rd Year',
-  bio: 'Passionate about technology and innovation. Love participating in hackathons and tech events.',
-  location: 'Painavu, Idukki',
-  interests: ['Machine Learning', 'Web Development', 'UI/UX Design', 'Open Source'],
-  socialLinks: {
-    github: 'https://github.com/alexjohnson',
-    linkedin: 'https://linkedin.com/in/alexjohnson',
-    portfolio: 'https://alexjohnson.dev'
-  },
-  stats: {
-    eventsAttended: 25,
-    communitiesJoined: 5,
-    bookmarkedEvents: 12,
-    completionRate: 85
-  },
-  achievements: [
-    { id: '1', title: 'Event Explorer', description: 'Attended 10+ events', icon: '🎯', earned: true },
-    { id: '2', title: 'Community Builder', description: 'Joined 5+ communities', icon: '👥', earned: true },
-    { id: '3', title: 'Tech Enthusiast', description: 'Attended 5+ tech events', icon: '💻', earned: true },
-    { id: '4', title: 'Cultural Ambassador', description: 'Attended 3+ cultural events', icon: '🎭', earned: false },
-    { id: '5', title: 'Super Participant', description: 'Attended 50+ events', icon: '⭐', earned: false }
-  ]
-};
-
-// Mock registered events
-const mockRegisteredEvents = [
-  {
-    id: '1',
-    title: 'AI/ML Workshop',
-    description: 'Learn the fundamentals of Artificial Intelligence and Machine Learning',
-    date: '2024-01-15',
-    time: '10:00 AM',
-    location: 'Main Auditorium',
-    poster: '/placeholder.svg',
-    organizer: 'IEEE Student Branch',
-    tags: ['Technical', 'AI/ML', 'Workshop'],
-    registrationCount: 150,
-    maxCapacity: 200,
-    status: 'upcoming'
-  },
-  {
-    id: '2',
-    title: 'Cultural Fest 2024',
-    description: 'Annual cultural festival celebrating art, music, and dance',
-    date: '2024-01-20',
-    time: '6:00 PM',
-    location: 'Open Grounds',
-    poster: '/placeholder.svg',
-    organizer: 'Cultural Committee',
-    tags: ['Cultural', 'Music', 'Dance'],
-    registrationCount: 300,
-    maxCapacity: 500,
-    status: 'upcoming'
-  }
-];
-
-// Mock bookmarked events
-const mockBookmarkedEvents = [
-  {
-    id: '3',
-    title: 'Hackathon 2024',
-    description: '48-hour coding challenge to build innovative solutions',
-    date: '2024-02-01',
-    time: '9:00 AM',
-    location: 'Computer Lab',
-    poster: '/placeholder.svg',
-    organizer: 'Coding Club',
-    tags: ['Technical', 'Hackathon', 'Coding'],
-    registrationCount: 80,
-    maxCapacity: 100,
-    status: 'upcoming'
-  }
-];
+interface UserProfile {
+  uid: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: 'student' | 'community_lead';
+  avatar?: string;
+  college: string;
+  department: string;
+  year?: string;
+  communityName?: string;
+  communityType?: string;
+  bio?: string;
+  location?: string;
+  createdAt: string;
+}
 
 export default function Profile() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState(mockUser);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [editForm, setEditForm] = useState({
+    bio: '',
+    location: '',
+    phone: ''
+  });
 
-  const handleSaveProfile = () => {
-    // Here you would save the profile data
-    console.log('Saving profile:', editedUser);
-    setIsEditing(false);
+  // Fetch user data from Firestore
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data() as UserProfile;
+            setUser(userData);
+            setEditForm({
+              bio: userData.bio || '',
+              location: userData.location || '',
+              phone: userData.phone || ''
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load profile data.",
+            variant: "destructive",
+          });
+        }
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [toast]);
+
+  const handleSaveProfile = async () => {
+    if (!user || !auth.currentUser) return;
+    
+    setIsLoading(true);
+    try {
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), editForm);
+      setUser({ ...user, ...editForm });
+      setIsEditing(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation user={{ name: 'Loading...', email: '', role: 'student', avatar: '', community: '' }} />
+        <div className="container max-w-6xl mx-auto py-8 px-4">
+          <div className="text-center">Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation user={{ name: 'Error', email: '', role: 'student', avatar: '', community: '' }} />
+        <div className="container max-w-6xl mx-auto py-8 px-4">
+          <div className="text-center">Failed to load profile data.</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation user={mockUser} />
+      <Navigation user={user} />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container max-w-6xl mx-auto py-8 px-4 space-y-8">
         {/* Profile Header */}
-        <div className="mb-8">
-          <Card className="card-elevated">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                <div className="relative">
-                  <Avatar className="w-24 h-24">
-                    <AvatarImage src={mockUser.avatar} alt={mockUser.name} />
-                    <AvatarFallback className="text-2xl">{mockUser.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-                  >
-                    <Camera className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <div className="flex-1 space-y-2">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                      <h1 className="text-3xl font-bold gradient-text">{mockUser.name}</h1>
-                      <p className="text-muted-foreground">{mockUser.email}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="secondary">{mockUser.role === 'student' ? 'Student' : 'Community Lead'}</Badge>
-                        <Badge variant="outline">{mockUser.year}</Badge>
-                      </div>
-                    </div>
-                    
-                    <Button
-                      variant={isEditing ? "default" : "outline"}
-                      onClick={isEditing ? handleSaveProfile : () => setIsEditing(true)}
-                      className="gap-2"
-                    >
-                      {isEditing ? (
-                        <>
-                          <Save className="h-4 w-4" />
-                          Save Changes
-                        </>
-                      ) : (
-                        <>
-                          <Edit3 className="h-4 w-4" />
-                          Edit Profile
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">{mockUser.stats.eventsAttended}</div>
-                      <div className="text-sm text-muted-foreground">Events Attended</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">{mockUser.stats.communitiesJoined}</div>
-                      <div className="text-sm text-muted-foreground">Communities</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">{mockUser.stats.bookmarkedEvents}</div>
-                      <div className="text-sm text-muted-foreground">Bookmarks</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">{mockUser.stats.completionRate}%</div>
-                      <div className="text-sm text-muted-foreground">Completion Rate</div>
-                    </div>
+        <Card className="card-elevated">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              <div className="flex flex-col items-center space-y-4">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={user.avatar || '/placeholder.svg'} alt={user.name} />
+                  <AvatarFallback className="text-2xl">{user.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="text-center">
+                  <h1 className="text-3xl font-bold gradient-text">{user.name}</h1>
+                  <p className="text-muted-foreground">{user.email}</p>
+                  <div className="flex gap-2 mt-2 justify-center">
+                    <Badge variant="secondary">{user.role === 'student' ? 'Student' : 'Community Lead'}</Badge>
+                    {user.year && <Badge variant="outline">{user.year}</Badge>}
+                    {user.communityName && <Badge variant="outline">{user.communityName}</Badge>}
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
+              <div className="flex-1 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">Profile Information</h2>
+                  {!isEditing ? (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={handleSaveProfile} disabled={isLoading}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Changes
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* College Info */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">{user.college}</p>
+                        <p className="text-sm text-muted-foreground">{user.department}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      {isEditing ? (
+                        <Input
+                          placeholder="Enter location"
+                          value={editForm.location}
+                          onChange={(e) => setEditForm({...editForm, location: e.target.value})}
+                        />
+                      ) : (
+                        <span>{user.location || 'Location not set'}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span>{user.email}</span>
+                    </div>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      {isEditing ? (
+                        <Input
+                          placeholder="Enter phone number"
+                          value={editForm.phone}
+                          onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                        />
+                      ) : (
+                        <span>{user.phone || 'Phone not set'}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bio Section */}
+                <div className="space-y-2">
+                  <Label>Bio</Label>
+                  {isEditing ? (
+                    <Textarea
+                      placeholder="Tell us about yourself..."
+                      value={editForm.bio}
+                      onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
+                      rows={3}
+                    />
+                  ) : (
+                    <p className="text-sm">{user.bio || 'No bio available'}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Additional Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="events">My Events</TabsTrigger>
             <TabsTrigger value="bookmarks">Bookmarks</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="card-elevated">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Personal Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {isEditing ? (
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="bio">Bio</Label>
-                        <Textarea
-                          id="bio"
-                          value={editedUser.bio}
-                          onChange={(e) => setEditedUser({ ...editedUser, bio: e.target.value })}
-                          placeholder="Tell us about yourself..."
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="location">Location</Label>
-                        <Input
-                          id="location"
-                          value={editedUser.location}
-                          onChange={(e) => setEditedUser({ ...editedUser, location: e.target.value })}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="phone">Phone</Label>
-                        <Input
-                          id="phone"
-                          value={editedUser.phone}
-                          onChange={(e) => setEditedUser({ ...editedUser, phone: e.target.value })}
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{mockUser.college}</p>
-                          <p className="text-sm text-muted-foreground">{mockUser.department}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{mockUser.location}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span>{mockUser.email}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{mockUser.phone}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">Bio:</p>
-                        <p className="text-sm">{mockUser.bio}</p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="card-elevated">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="h-5 w-5" />
-                    Interests & Skills
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {mockUser.interests.map((interest, index) => (
-                      <Badge key={index} variant="secondary">
-                        {interest}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Activity Overview */}
-            <Card className="card-elevated">
+          <TabsContent value="events" className="space-y-4">
+            <Card>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle>Registered Events</CardTitle>
+                <CardDescription>Events you've registered for</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">No registered events yet.</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bookmarks" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bookmarked Events</CardTitle>
+                <CardDescription>Events you've saved for later</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">No bookmarked events yet.</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Settings</CardTitle>
+                <CardDescription>Manage your account preferences</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm">Registered for <strong>AI/ML Workshop</strong></p>
-                      <p className="text-xs text-muted-foreground">2 hours ago</p>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium">Email Notifications</p>
+                      <p className="text-xs text-muted-foreground">Receive notifications about events</p>
                     </div>
+                    <Button variant="outline" size="sm">Configure</Button>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm">Joined <strong>IEEE Student Branch</strong> community</p>
-                      <p className="text-xs text-muted-foreground">1 day ago</p>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium">Privacy Settings</p>
+                      <p className="text-xs text-muted-foreground">Control who can see your profile</p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm">Bookmarked <strong>Hackathon 2024</strong></p>
-                      <p className="text-xs text-muted-foreground">3 days ago</p>
-                    </div>
+                    <Button variant="outline" size="sm">Manage</Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Events Tab */}
-          <TabsContent value="events" className="space-y-6">
-            <Card className="card-elevated">
-              <CardHeader>
-                <CardTitle>Registered Events</CardTitle>
-                <CardDescription>
-                  Events you have registered for
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-6">
-                  {mockRegisteredEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Bookmarks Tab */}
-          <TabsContent value="bookmarks" className="space-y-6">
-            <Card className="card-elevated">
-              <CardHeader>
-                <CardTitle>Bookmarked Events</CardTitle>
-                <CardDescription>
-                  Events you have saved for later
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-6">
-                  {mockBookmarkedEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Achievements Tab */}
-          <TabsContent value="achievements" className="space-y-6">
-            <Card className="card-elevated">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5" />
-                  Achievements
-                </CardTitle>
-                <CardDescription>
-                  Your accomplishments and milestones
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {mockUser.achievements.map((achievement) => (
-                    <div
-                      key={achievement.id}
-                      className={`p-4 rounded-lg border ${
-                        achievement.earned 
-                          ? 'bg-primary/5 border-primary/20' 
-                          : 'bg-muted/30 border-border/50 opacity-60'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">{achievement.icon}</div>
-                        <div>
-                          <h3 className="font-semibold">{achievement.title}</h3>
-                          <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                          {achievement.earned && (
-                            <Badge variant="default" className="mt-2">Earned</Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <div className="grid gap-6">
-              <Card className="card-elevated">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" />
-                    Notification Preferences
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Event Notifications</h4>
-                      <p className="text-sm text-muted-foreground">Get notified about new events</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Bell className="h-4 w-4 mr-2" />
-                      Enabled
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Registration Updates</h4>
-                      <p className="text-sm text-muted-foreground">Updates about your registered events</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Bell className="h-4 w-4 mr-2" />
-                      Enabled
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Community Updates</h4>
-                      <p className="text-sm text-muted-foreground">News from your joined communities</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Bell className="h-4 w-4 mr-2" />
-                      Enabled
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="card-elevated">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Privacy Settings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Profile Visibility</h4>
-                      <p className="text-sm text-muted-foreground">Who can see your profile</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Public
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Event History</h4>
-                      <p className="text-sm text-muted-foreground">Show your event participation</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Visible
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
         </Tabs>
       </div>
