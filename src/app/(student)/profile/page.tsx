@@ -114,7 +114,7 @@ export default function Profile() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navigation user={{ name: 'Loading...', email: '', role: 'student', avatar: '', community: '' }} />
+        <Navigation user={{ name: 'Loading...', email: '', role: 'student', avatar: '' }} />
         <div className="container max-w-6xl mx-auto py-8 px-4">
           <div className="text-center">Loading profile...</div>
         </div>
@@ -125,7 +125,7 @@ export default function Profile() {
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
-        <Navigation user={{ name: 'Error', email: '', role: 'student', avatar: '', community: '' }} />
+        <Navigation user={{ name: 'Error', email: '', role: 'student', avatar: '' }} />
         <div className="container max-w-6xl mx-auto py-8 px-4">
           <div className="text-center">Failed to load profile data.</div>
         </div>
@@ -263,7 +263,7 @@ export default function Profile() {
             <Card>
               <CardHeader>
                 <CardTitle>Registered Events</CardTitle>
-                <CardDescription>Events you've registered for</CardDescription>
+                <CardDescription>Events you&apos;ve registered for</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">No registered events yet.</p>
@@ -275,7 +275,7 @@ export default function Profile() {
             <Card>
               <CardHeader>
                 <CardTitle>Bookmarked Events</CardTitle>
-                <CardDescription>Events you've saved for later</CardDescription>
+                <CardDescription>Events you&apos;ve saved for later</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">No bookmarked events yet.</p>

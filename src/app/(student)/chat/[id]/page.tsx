@@ -19,8 +19,11 @@ import {
   Settings,
   Star,
   Image as ImageIcon,
-  File
+  File,
+  ArrowLeft
 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // Mock user data
 const mockUser = {
@@ -30,14 +33,51 @@ const mockUser = {
   avatar: '/placeholder.svg'
 };
 
-// Mock community data
-const mockCommunity = {
-  id: '1',
-  name: 'IEEE Student Branch',
-  type: 'Technical',
-  members: 250,
-  onlineMembers: 45,
-  avatar: '/placeholder.svg'
+// Mock community data - this would come from the route parameter
+const getCommunityData = (id: string) => {
+  const communities = {
+    '1': {
+      id: '1',
+      name: 'IEEE Student Branch',
+      type: 'Technical',
+      members: 250,
+      onlineMembers: 45,
+      avatar: '/placeholder.svg'
+    },
+    '2': {
+      id: '2',
+      name: 'Coding Club',
+      type: 'Technical',
+      members: 180,
+      onlineMembers: 32,
+      avatar: '/placeholder.svg'
+    },
+    '3': {
+      id: '3',
+      name: 'Cultural Committee',
+      type: 'Cultural',
+      members: 320,
+      onlineMembers: 58,
+      avatar: '/placeholder.svg'
+    },
+    '4': {
+      id: '4',
+      name: 'Photography Club',
+      type: 'Creative',
+      members: 95,
+      onlineMembers: 12,
+      avatar: '/placeholder.svg'
+    },
+    '5': {
+      id: '5',
+      name: 'Entrepreneurship Cell',
+      type: 'Business',
+      members: 150,
+      onlineMembers: 28,
+      avatar: '/placeholder.svg'
+    }
+  };
+  return communities[id as keyof typeof communities] || communities['1'];
 };
 
 // Mock chat channels
@@ -94,11 +134,14 @@ const mockOnlineMembers = [
   { id: '5', name: 'Rahul Kumar', avatar: '/placeholder.svg', role: 'Student', status: 'away' }
 ];
 
-export default function CommunityChat({ params }: { params: { id: string } }) {
+export default function StudentCommunityChat({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const [selectedChannel, setSelectedChannel] = useState(mockChannels[0]);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState(mockMessages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const mockCommunity = getCommunityData(params.id);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -115,7 +158,7 @@ export default function CommunityChat({ params }: { params: { id: string } }) {
         author: { 
           name: mockUser.name, 
           avatar: mockUser.avatar, 
-          role: (mockUser.role as string) === 'community_lead' ? 'Community Lead' : 'Student' 
+          role: 'Student' 
         },
         content: message,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -141,6 +184,16 @@ export default function CommunityChat({ params }: { params: { id: string } }) {
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Sidebar */}
         <div className="w-64 border-r border-border bg-card">
+          {/* Back to Chat List */}
+          <div className="p-4 border-b border-border">
+            <Button asChild variant="ghost" size="sm" className="w-full justify-start gap-2">
+              <Link href="/chat">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Chats
+              </Link>
+            </Button>
+          </div>
+
           {/* Community Header */}
           <div className="p-4 border-b border-border">
             <div className="flex items-center gap-3">
@@ -326,6 +379,4 @@ export default function CommunityChat({ params }: { params: { id: string } }) {
       </div>
     </div>
   );
-};
-
-// Remove the duplicate export - using the function export above
+}

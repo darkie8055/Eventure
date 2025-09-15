@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Navigation } from '@/components/layout/Navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -274,9 +275,11 @@ const Communities = () => {
                       <div className="flex gap-2 pt-2">
                         {community.isJoined ? (
                           <>
-                            <Button size="sm" variant="outline" className="flex-1 gap-1">
-                              <MessageCircle className="h-4 w-4" />
-                              Chat
+                            <Button asChild size="sm" variant="outline" className="flex-1 gap-1">
+                              <Link href="/chat">
+                                <MessageCircle className="h-4 w-4" />
+                                Chat
+                              </Link>
                             </Button>
                             <Button size="sm" variant="outline">
                               <Star className="h-4 w-4" />

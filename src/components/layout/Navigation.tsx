@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   Bell,
-  Plus
+  Plus,
+  MessageCircle
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -39,6 +40,7 @@ export function Navigation({ user }: NavigationProps) {
     : [
         { path: '/events', label: 'Events', icon: Calendar },
         { path: '/communities', label: 'Communities', icon: Home },
+        { path: '/chat', label: 'Chat', icon: MessageCircle },
         { path: '/bookmarks', label: 'Bookmarks', icon: BookmarkIcon },
         { path: '/student-dashboard', label: 'Dashboard', icon: Settings },
       ];
