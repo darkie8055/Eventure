@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, use } from 'react';
 import { Navigation } from '@/components/layout/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -94,7 +94,8 @@ const mockOnlineMembers = [
   { id: '5', name: 'Rahul Kumar', avatar: '/placeholder.svg', role: 'Student', status: 'away' }
 ];
 
-export default function CommunityChat({ params }: { params: { id: string } }) {
+export default function CommunityChat({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const [selectedChannel, setSelectedChannel] = useState(mockChannels[0]);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState(mockMessages);

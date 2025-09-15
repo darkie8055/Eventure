@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeScript } from "@/components/theme-script";
 import { Providers } from './providers'
 import './globals.css'
 
@@ -19,7 +20,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body className={inter.className}>
         <Providers>
           <TooltipProvider>
