@@ -1,18 +1,13 @@
-'use client'
-
+import { AuthLayout } from '@/components/auth/AuthLayout';
 import { SignupForm } from '@/components/auth/SignupForm';
-import { useRouter } from 'next/navigation';
 
-export default function Signup() {
-  const router = useRouter();
-
-  const handleSignup = (data: any, role: 'student' | 'community_lead') => {
-    // Here you would typically register with your backend
-    console.log('Signup data:', { ...data, role });
-    
-    // For demo purposes, redirect to events page
-    router.push('/events');
-  };
-
-  return <SignupForm onSignup={handleSignup} />;
+export default function SignupPage() {
+  return (
+    <AuthLayout
+      title="Join Eventure"
+      subtitle="Create your account and start connecting with your campus community"
+    >
+      <SignupForm />
+    </AuthLayout>
+  );
 }

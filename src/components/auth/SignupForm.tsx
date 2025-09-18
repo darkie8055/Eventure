@@ -159,8 +159,7 @@ export function SignupForm({ onSignup }: SignupFormProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-lg card-elevated">
+    <Card className="w-full max-w-lg card-elevated">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-glow">
@@ -541,6 +540,5 @@ export function SignupForm({ onSignup }: SignupFormProps) {
           </div>
         </CardContent>
       </Card>
-    </div>
   );
 }

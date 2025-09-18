@@ -59,8 +59,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md card-elevated">
+    <Card className="w-full max-w-md card-elevated">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-glow">
@@ -158,7 +157,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link
                 href="/signup"
                 className="text-primary hover:text-primary-glow transition-colors font-medium"
@@ -178,6 +177,5 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           </div>
         </CardContent>
       </Card>
-    </div>
   );
 }
