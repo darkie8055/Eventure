@@ -22,20 +22,28 @@ const studentSignupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string(),
   college: z.string().min(1, 'Please select your college'),
   department: z.string().min(1, 'Please select your department'),
   year: z.string().min(1, 'Please select your year'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 const communityLeadSignupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string(),
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
   college: z.string().min(1, 'Please select your college'),
   department: z.string().min(1, 'Please select your department'),
   communityName: z.string().min(2, 'Community name must be at least 2 characters'),
   communityType: z.string().min(1, 'Please select community type'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 type StudentSignupData = z.infer<typeof studentSignupSchema>;
@@ -73,6 +81,7 @@ const communityTypes = [
 
 export function SignupForm({ onSignup }: SignupFormProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('student');
 
@@ -82,6 +91,7 @@ export function SignupForm({ onSignup }: SignupFormProps) {
       name: '',
       email: '',
       password: '',
+      confirmPassword: '',
       college: '',
       department: '',
       year: '',
@@ -94,6 +104,7 @@ export function SignupForm({ onSignup }: SignupFormProps) {
       name: '',
       email: '',
       password: '',
+      confirmPassword: '',
       phone: '',
       college: '',
       department: '',
@@ -239,6 +250,41 @@ export function SignupForm({ onSignup }: SignupFormProps) {
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={studentForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              placeholder="Confirm your password"
+                              className="pl-10 pr-10"
+                              {...field}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                              {showConfirmPassword ? (
                                 <EyeOff className="h-4 w-4 text-muted-foreground" />
                               ) : (
                                 <Eye className="h-4 w-4 text-muted-foreground" />
@@ -413,6 +459,41 @@ export function SignupForm({ onSignup }: SignupFormProps) {
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={leadForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              placeholder="Confirm your password"
+                              className="pl-10 pr-10"
+                              {...field}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                              {showConfirmPassword ? (
                                 <EyeOff className="h-4 w-4 text-muted-foreground" />
                               ) : (
                                 <Eye className="h-4 w-4 text-muted-foreground" />

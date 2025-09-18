@@ -24,7 +24,7 @@ export default function Home() {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="relative container mx-auto px-4 pt-32 pb-20">
+      <section className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 blur-3xl -z-10" />
         
         <div className="text-center max-w-6xl mx-auto">
@@ -463,7 +463,7 @@ export default function Home() {
           </div>
           
           <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 Eventure. All rights reserved. Built with ❤️ for students, by students.</p>
+            <p>&copy; 2025 Eventure. All rights reserved. Built with ❤️ for students, by students.</p>
           </div>
         </div>
       </footer>
