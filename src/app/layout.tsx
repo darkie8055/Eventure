@@ -24,7 +24,7 @@ export default function RootLayout({
       <head>
         <ThemeScript />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <Providers>
           <TooltipProvider>
             <Toaster />
