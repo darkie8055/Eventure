@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/AuthContext';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface Notification {
   id: string;
@@ -17,79 +20,105 @@ interface Notification {
   read: boolean;
   avatar?: string;
   actionUrl?: string;
+  userId: string;
 }
 
-// Mock notifications data
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'event',
-    title: 'New Event: Tech Talk on AI',
-    message: 'IEEE Student Branch is hosting a tech talk on AI this Friday',
-    timestamp: '2 hours ago',
-    read: false,
-    avatar: '/placeholder.svg',
-    actionUrl: '/events/1'
-  },
-  {
-    id: '2',
-    type: 'comment',
-    title: 'Comment on your event',
-    message: 'Sarah Wilson commented on "React Workshop"',
-    timestamp: '5 hours ago',
-    read: false,
-    avatar: '/placeholder.svg',
-    actionUrl: '/events/2'
-  },
-  {
-    id: '3',
-    type: 'verification',
-    title: 'Community Verification Update',
-    message: 'Your community verification request is under review',
-    timestamp: '1 day ago',
-    read: true,
-    actionUrl: '/verification'
-  },
-  {
-    id: '4',
-    type: 'announcement',
-    title: 'Platform Update',
-    message: 'New features have been added to Eventure!',
-    timestamp: '2 days ago',
-    read: true
-  }
-];
-
 export function NotificationBell() {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    // Set up real-time listener for user's notifications
+    const notificationsRef = collection(db, 'notifications');
+    const q = query(
+      notificationsRef,
+      where('userId', '==', user.uid),
+      orderBy('timestamp', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedNotifications: Notification[] = [];
+      snapshot.forEach((doc) => {
+        fetchedNotifications.push({ id: doc.id, ...doc.data() } as Notification);
+      });
+      setNotifications(fetchedNotifications);
+    }, (error) => {
+      console.error('Error fetching notifications:', error);
+      // Fallback to empty array on error
+      setNotifications([]);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   useEffect(() => {
     const count = notifications.filter(n => !n.read).length;
     setUnreadCount(count);
   }, [notifications]);
 
-  const markAsRead = (notificationId: string) => {
-    setNotifications(prev =>
-      prev.map(notification =>
-        notification.id === notificationId
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
+  const markAsRead = async (notificationId: string) => {
+    if (!user) return;
+    
+    try {
+      // Update in Firebase
+      const notificationRef = doc(db, 'notifications', notificationId);
+      await updateDoc(notificationRef, { read: true });
+      
+      // Update local state immediately for better UX (Firebase will sync via onSnapshot)
+      setNotifications(prev =>
+        prev.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, read: true }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notification => ({ ...notification, read: true }))
-    );
+  const markAllAsRead = async () => {
+    if (!user) return;
+    
+    try {
+      // Update all unread notifications in Firebase
+      const batch = notifications
+        .filter(n => !n.read)
+        .map(async (notification) => {
+          const notificationRef = doc(db, 'notifications', notification.id);
+          return updateDoc(notificationRef, { read: true });
+        });
+      
+      await Promise.all(batch);
+      
+      // Update local state immediately for better UX
+      setNotifications(prev =>
+        prev.map(notification => ({ ...notification, read: true }))
+      );
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
   };
 
-  const deleteNotification = (notificationId: string) => {
-    setNotifications(prev =>
-      prev.filter(notification => notification.id !== notificationId)
-    );
+  const deleteNotification = async (notificationId: string) => {
+    if (!user) return;
+    
+    try {
+      // Note: You might want to implement soft delete by adding a 'deleted' field
+      // instead of actually deleting the document for audit purposes
+      setNotifications(prev =>
+        prev.filter(notification => notification.id !== notificationId)
+      );
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
   };
 
   const getNotificationIcon = (type: string) => {

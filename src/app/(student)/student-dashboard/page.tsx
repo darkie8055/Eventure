@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Calendar, 
   Users, 
@@ -21,80 +22,102 @@ import {
   Share2
 } from 'lucide-react';
 import { EventCard } from '@/components/events/EventCard';
-
-// Mock user data - replace with actual auth
-const mockUser = {
-  name: 'Alex Johnson',
-  email: 'alex@student.college.edu',
-  role: 'student' as const,
-  avatar: '/placeholder.svg',
-  college: 'Government Engineering College',
-  department: 'Computer Science',
-  year: '3rd Year'
-};
-
-// Mock events data
-const mockEvents = [
-  {
-    id: '1',
-    title: 'AI/ML Workshop',
-    description: 'Learn the fundamentals of artificial intelligence and machine learning',
-    date: '2024-01-15',
-    time: '10:00 AM',
-    location: 'Seminar Hall A',
-    image: '/placeholder.svg',
-    tags: ['Workshop', 'AI/ML', 'Technology'],
-    registrations: 150,
-    registeredCount: 150,
-    community: 'IEEE Student Branch',
-    organizer: { name: 'IEEE Student Branch', community: 'IEEE Student Branch' },
-    isRegistered: true,
-    isBookmarked: false
-  },
-  {
-    id: '2',
-    title: 'Hackathon 2024',
-    description: '48-hour coding marathon to solve real-world problems',
-    date: '2024-01-20',
-    time: '9:00 AM',
-    location: 'Computer Lab',
-    image: '/placeholder.svg',
-    tags: ['Hackathon', 'Coding', 'Competition'],
-    registrations: 89,
-    registeredCount: 89,
-    community: 'Coding Club',
-    organizer: { name: 'Coding Club', community: 'Coding Club' },
-    isRegistered: false,
-    isBookmarked: true
-  }
-];
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserStats } from '@/hooks/useUserStats';
+import { collection, query, where, orderBy, onSnapshot, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, userProfile, loading: authLoading } = useAuth();
+  const { stats: userStats, loading: statsLoading } = useUserStats();
+
+  // Fetch events
+  useEffect(() => {
+    if (!user || !userProfile || authLoading) return;
+
+    const fetchEvents = () => {
+      try {
+        setLoading(true);
+
+        // Set up real-time listener for events
+        const eventsRef = collection(db, 'events');
+        const eventsQuery = query(
+          eventsRef,
+          orderBy('date', 'asc'),
+          limit(10)
+        );
+
+        const unsubscribe = onSnapshot(eventsQuery, (snapshot) => {
+          const fetchedEvents: any[] = [];
+          snapshot.forEach((doc) => {
+            fetchedEvents.push({ id: doc.id, ...doc.data() });
+          });
+          setEvents(fetchedEvents);
+        }, (error) => {
+          console.error('Error fetching events:', error);
+          setEvents([]); // Fallback to empty array
+        });
+
+        return () => unsubscribe();
+      } catch (error) {
+        console.error('Error setting up events listener:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [user, userProfile, authLoading]);
+
+  // Show loading state while auth or data is loading
+  if (authLoading || loading || statsLoading || !userProfile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-1/3" />
+            <Skeleton className="h-6 w-1/2" />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-24" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation user={mockUser} />
+      <Navigation />
       
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold gradient-text mb-2">
-              Welcome back, {mockUser.name}!
+              Welcome back, {userProfile.name}!
             </h1>
             <p className="text-muted-foreground">
-              {mockUser.department} • {mockUser.year} • {mockUser.college}
+              {userProfile.department && userProfile.year && userProfile.college ? (
+                `${userProfile.department} • ${userProfile.year} • ${userProfile.college}`
+              ) : (
+                userProfile.college || 'Student Dashboard'
+              )}
             </p>
           </div>
           
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={mockUser.avatar} alt={mockUser.name} />
-              <AvatarFallback>{mockUser.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={userProfile.email || ''} alt={userProfile.name} />
+              <AvatarFallback>{userProfile.name.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <Badge variant="secondary" className="text-sm">
-              {(mockUser.role as string) === 'community_lead' ? 'Community Lead' : 'Student'}
+              {userProfile.role === 'community_lead' ? 'Community Lead' : 'Student'}
             </Badge>
           </div>
         </div>
@@ -109,8 +132,8 @@ const Dashboard = () => {
               <Calendar className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">12</div>
-              <p className="text-xs text-success">+2 this month</p>
+              <div className="text-2xl font-bold text-foreground">{userStats.eventsRegistered}</div>
+              <p className="text-xs text-muted-foreground">Total registrations</p>
             </CardContent>
           </Card>
 
@@ -122,34 +145,34 @@ const Dashboard = () => {
               <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">5</div>
-              <p className="text-xs text-success">Active member</p>
+              <div className="text-2xl font-bold text-foreground">{userStats.communitiesJoined}</div>
+              <p className="text-xs text-muted-foreground">Active member</p>
             </CardContent>
           </Card>
 
           <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Achievements
+                Upcoming Events
               </CardTitle>
               <Award className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">8</div>
-              <p className="text-xs text-success">+1 this week</p>
+              <div className="text-2xl font-bold text-foreground">{userStats.upcomingEvents}</div>
+              <p className="text-xs text-muted-foreground">Coming soon</p>
             </CardContent>
           </Card>
 
           <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Bookmarks
+                Events Organized
               </CardTitle>
               <BookOpen className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">15</div>
-              <p className="text-xs text-muted-foreground">Saved events</p>
+              <div className="text-2xl font-bold text-foreground">{userStats.eventsOrganized}</div>
+              <p className="text-xs text-muted-foreground">Total organized</p>
             </CardContent>
           </Card>
         </div>
@@ -172,27 +195,35 @@ const Dashboard = () => {
                   Upcoming Events
                 </CardTitle>
                 <CardDescription>
-                  Events you're registered for happening soon
+                  Events you&apos;re registered for happening soon
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockEvents.filter(event => event.isRegistered).map((event) => (
-                    <div key={event.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-                          <Calendar className="h-6 w-6 text-primary-foreground" />
+                  {events.length > 0 ? (
+                    events.slice(0, 3).map((event) => (
+                      <div key={event.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
+                            <Calendar className="h-6 w-6 text-primary-foreground" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-foreground">{event.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {event.date} • {event.time} • {event.location}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-medium text-foreground">{event.title}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {event.date} • {event.time} • {event.location}
-                          </p>
-                        </div>
+                        <Badge variant="secondary">{event.community || 'Event'}</Badge>
                       </div>
-                      <Badge variant="secondary">{event.community}</Badge>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No upcoming events yet</p>
+                      <p className="text-sm">Register for events to see them here</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -233,26 +264,36 @@ const Dashboard = () => {
           <TabsContent value="registered" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold text-foreground">Registered Events</h2>
-              <Badge variant="secondary">2 events</Badge>
+              <Badge variant="secondary">{events.length} events</Badge>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {mockEvents.filter(event => event.isRegistered).map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
+              {events.length > 0 ? (
+                events.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-12 text-muted-foreground">
+                  <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-medium mb-2">No registered events</h3>
+                  <p>Browse and register for events to see them here</p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
           <TabsContent value="bookmarks" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold text-foreground">Bookmarked Events</h2>
-              <Badge variant="secondary">1 event</Badge>
+              <Badge variant="secondary">0 events</Badge>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {mockEvents.filter(event => event.isBookmarked).map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
+              <div className="col-span-2 text-center py-12 text-muted-foreground">
+                <BookOpen className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-medium mb-2">No bookmarked events</h3>
+                <p>Bookmark events you&apos;re interested in to see them here</p>
+              </div>
             </div>
           </TabsContent>
 

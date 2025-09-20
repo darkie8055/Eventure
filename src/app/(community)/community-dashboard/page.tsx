@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Navigation } from "@/components/layout/Navigation";
 import {
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Calendar,
   Users,
@@ -28,81 +29,88 @@ import {
   Trophy,
   Target,
 } from "lucide-react";
-
-// Mock community lead data
-const mockUser = {
-  name: "Sarah Wilson",
-  email: "sarah@ieee.college.edu",
-  role: "community_lead" as const,
-  avatar: "/placeholder.svg",
-  college: "Government Engineering College",
-  community: "IEEE Student Branch",
-};
-
-// Mock events data for community lead
-const mockEvents = [
-  {
-    id: "1",
-    title: "AI/ML Workshop",
-    date: "2024-01-15",
-    registrations: 150,
-    status: "upcoming",
-    views: 320,
-    engagement: 85,
-  },
-  {
-    id: "2",
-    title: "Tech Talk Series",
-    date: "2024-01-10",
-    registrations: 89,
-    status: "completed",
-    views: 245,
-    engagement: 72,
-  },
-  {
-    id: "3",
-    title: "Innovation Challenge",
-    date: "2024-01-25",
-    registrations: 234,
-    status: "upcoming",
-    views: 567,
-    engagement: 91,
-  },
-];
-
-// Mock leaderboard data
-const mockLeaderboard = [
-  {
-    rank: 1,
-    name: "IEEE Student Branch",
-    registrations: 1250,
-    events: 15,
-    score: 98,
-  },
-  { rank: 2, name: "Coding Club", registrations: 980, events: 12, score: 87 },
-  {
-    rank: 3,
-    name: "Cultural Committee",
-    registrations: 856,
-    events: 18,
-    score: 82,
-  },
-  { rank: 4, name: "NSS Unit", registrations: 745, events: 10, score: 76 },
-  {
-    rank: 5,
-    name: "Innovation Cell",
-    registrations: 623,
-    events: 8,
-    score: 71,
-  },
-];
+import { useAuth } from "@/contexts/AuthContext";
+import { UserProfileService } from "@/services/UserProfileService";
+import { collection, query, where, orderBy, onSnapshot, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const CommunityDashboard = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState('overview');
+  const [events, setEvents] = useState<any[]>([]);
+  const [userStats, setUserStats] = useState({
+    eventsRegistered: 0,
+    eventsOrganized: 0,
+    upcomingEvents: 0,
+    communitiesJoined: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const { user, userProfile, loading: authLoading } = useAuth();
+
+  // Fetch community leader data
+  useEffect(() => {
+    if (!user || !userProfile || authLoading || userProfile.role !== 'community_lead') return;
+
+    const fetchCommunityData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch community statistics
+        const stats = await UserProfileService.getUserStats(user.uid);
+        setUserStats(stats);
+
+        // Set up real-time listener for community events
+        const eventsRef = collection(db, 'events');
+        const eventsQuery = query(
+          eventsRef,
+          where('organizerId', '==', user.uid),
+          orderBy('date', 'desc'),
+          limit(10)
+        );
+
+        const unsubscribe = onSnapshot(eventsQuery, (snapshot) => {
+          const fetchedEvents: any[] = [];
+          snapshot.forEach((doc) => {
+            fetchedEvents.push({ id: doc.id, ...doc.data() });
+          });
+          setEvents(fetchedEvents);
+        }, (error) => {
+          console.error('Error fetching community events:', error);
+          setEvents([]);
+        });
+
+        return () => unsubscribe();
+      } catch (error) {
+        console.error('Error fetching community data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommunityData();
+  }, [user, userProfile, authLoading]);
+
+  // Show loading state while auth or data is loading
+  if (authLoading || loading || !userProfile || userProfile.role !== 'community_lead') {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-1/3" />
+            <Skeleton className="h-6 w-1/2" />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-24" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation user={mockUser} />
+      <Navigation />
 
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -112,7 +120,7 @@ const CommunityDashboard = () => {
               Community Dashboard
             </h1>
             <p className="text-muted-foreground">
-              {mockUser.community} • {mockUser.college}
+              {userProfile.communityName || 'Community Lead'} • {userProfile.college}
             </p>
           </div>
 
@@ -124,8 +132,8 @@ const CommunityDashboard = () => {
               </Link>
             </Button>
             <Avatar className="h-12 w-12">
-              <AvatarImage src={mockUser.avatar} alt={mockUser.name} />
-              <AvatarFallback>{mockUser.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={userProfile.email || ''} alt={userProfile.name} />
+              <AvatarFallback>{userProfile.name.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
           </div>
         </div>

@@ -223,25 +223,6 @@ export function LoginForm({
             </Link>
           </p>
         </div>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 rounded-lg bg-muted/30 border border-border/50">
-          <p className="text-xs text-muted-foreground mb-2 font-medium">
-            Demo Credentials:
-          </p>
-          <div className="space-y-1 text-xs text-muted-foreground">
-            <p>
-              <strong>Student:</strong> student@college.edu / password123
-            </p>
-            <p>
-              <strong>Community Lead:</strong> lead@college.edu / password123
-            </p>
-            <p className="mt-2 text-amber-600">
-              <strong>Note:</strong> Check "Remember me" to enable automatic
-              login on page refresh.
-            </p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );

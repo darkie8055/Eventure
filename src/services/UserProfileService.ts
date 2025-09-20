@@ -201,4 +201,59 @@ export class UserProfileService {
       throw error;
     }
   }
+
+  /**
+   * Get user dashboard statistics
+   * @param uid User ID
+   * @returns Dashboard statistics for the user
+   */
+  static async getUserStats(uid: string): Promise<{
+    eventsRegistered: number;
+    eventsOrganized: number;
+    upcomingEvents: number;
+    communitiesJoined: number;
+  }> {
+    try {
+      // These would be implemented with proper Firestore collections for events, registrations, etc.
+      // For now, returning default values that can be updated with real data
+      const stats = {
+        eventsRegistered: 0,
+        eventsOrganized: 0,
+        upcomingEvents: 0,
+        communitiesJoined: 0,
+      };
+
+      // TODO: Implement actual queries when event and registration collections are set up
+      // Example queries would be:
+      // const registrationsQuery = query(collection(db, 'registrations'), where('userId', '==', uid));
+      // const organizedEventsQuery = query(collection(db, 'events'), where('organizerId', '==', uid));
+      
+      return stats;
+    } catch (error) {
+      console.error("Error getting user stats:", error);
+      return {
+        eventsRegistered: 0,
+        eventsOrganized: 0,
+        upcomingEvents: 0,
+        communitiesJoined: 0,
+      };
+    }
+  }
+
+  /**
+   * Get user's recent activity
+   * @param uid User ID
+   * @param limit Number of activities to fetch
+   * @returns Array of recent user activities
+   */
+  static async getUserActivity(uid: string, limit: number = 10): Promise<any[]> {
+    try {
+      // TODO: Implement when activity tracking is set up
+      // This would query an 'activities' collection for user actions
+      return [];
+    } catch (error) {
+      console.error("Error getting user activity:", error);
+      return [];
+    }
+  }
 }
