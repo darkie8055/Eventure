@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy:dev-rules": "node scripts/deploy-dev-rules.js",
+    "restore:prod-rules": "node scripts/restore-prod-rules.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
