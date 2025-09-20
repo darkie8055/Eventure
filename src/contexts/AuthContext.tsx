@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -64,8 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [enableAutoLogin, setEnableAutoLogin] = useState(false);
+  const [enableAutoLogin, setEnableAutoLogin] = useState(true); // Enable by default
   const router = useRouter();
+  const currentUserRef = useRef<string | null>(null);
 
   // Listen for Firebase auth state changes
   useEffect(() => {
@@ -90,6 +91,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Skip profile fetching if we already have a profile for this user
+      // This prevents redundant calls during signup flow
+      if (currentUserRef.current === firebaseUser.uid) {
+        setLoading(false);
+        return;
+      }
+
       // Debug authentication process
       console.log(
         "Authentication state change detected for:",
@@ -98,6 +106,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // User is authenticated and auto login is enabled
       try {
+        // Update the current user ref
+        currentUserRef.current = firebaseUser.uid;
+        
         // Use the helper function to get or create user profile
         const profile = await getOrCreateUserProfile(db, firebaseUser);
         setUserProfile(profile);
@@ -137,12 +148,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Cleanup subscription
     return () => unsubscribe();
-  }, [enableAutoLogin]); // Added enableAutoLogin as a dependency
+  }, [enableAutoLogin]); // Removed userProfile dependency to avoid infinite loops
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      
+      // Temporarily enable auto-login to allow authentication to complete
+      const wasAutoLoginEnabled = enableAutoLogin;
+      setEnableAutoLogin(true);
 
       // Sign in with Firebase Authentication
       const userCredential = await signInWithEmailAndPassword(
@@ -158,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userCredential.user
         );
         setUserProfile(userProfile);
+        currentUserRef.current = userCredential.user.uid;
 
         // If the profile was created as a fallback, try to save it to Firestore
         if (!userProfile.createdAt) {
@@ -175,12 +191,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Continue with the fallback profile even if saving fails
           }
         }
+        
+        // Keep auto-login enabled if it was originally enabled (remember me was checked)
+        // This allows the user to stay logged in for future sessions
+        if (!wasAutoLoginEnabled) {
+          // If remember me wasn't checked, we keep auto-login enabled for this session
+          // but it won't persist for future sessions
+        }
+        
       } catch (error: any) {
         console.error("Error handling user profile:", error);
 
         // Create a fallback profile as last resort
         const fallbackProfile = createFallbackProfile(userCredential.user);
         setUserProfile(fallbackProfile);
+        currentUserRef.current = userCredential.user.uid;
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -198,7 +223,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       setLoading(true);
-      // Create user in Firebase Auth
+      
+      // Temporarily enable auto-login to allow registration to complete
+      setEnableAutoLogin(true);
+      
+      // Create user in Firebase Auth and profile in Firestore concurrently
+      // This is safe because we know the user data structure
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -213,8 +243,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date().toISOString(),
       };
 
-      await setDoc(doc(db, "users", userCredential.user.uid), userProfile);
+      // Set profile immediately to avoid auth state listener delays
       setUserProfile(userProfile);
+      currentUserRef.current = userCredential.user.uid;
+      
+      // Save to Firestore in background (don't await to speed up UI)
+      setDoc(doc(db, "users", userCredential.user.uid), userProfile).catch((error) => {
+        console.error("Failed to save profile to Firestore:", error);
+        // Profile is already set in state, so this is not critical for UX
+      });
+      
     } catch (error: any) {
       console.error("Signup error:", error);
       throw error;

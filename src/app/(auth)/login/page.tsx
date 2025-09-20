@@ -7,14 +7,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const { isAuthenticated, userProfile, enableAutoLogin, setEnableAutoLogin } =
-    useAuth();
+  const { isAuthenticated, userProfile } = useAuth();
   const router = useRouter();
-
-  // On component mount, ensure auto-login is disabled by default
-  useEffect(() => {
-    setEnableAutoLogin(false);
-  }, [setEnableAutoLogin]);
 
   // Redirect if already authenticated
   useEffect(() => {

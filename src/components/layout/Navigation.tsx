@@ -6,6 +6,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -22,6 +30,8 @@ import {
   Users,
   FileText,
   UserCheck,
+  User,
+  ChevronDown,
 } from "lucide-react";
 
 export function Navigation() {
@@ -104,25 +114,56 @@ export function Navigation() {
           <div className="flex items-center space-x-4">
             {isAuthenticated && userProfile ? (
               <div className="flex items-center space-x-3">
-                <div className="hidden md:block text-right">
-                  <p className="text-sm font-medium text-foreground">
-                    {userProfile && userProfile.name
-                      ? userProfile.name
-                      : "User"}
-                  </p>
-                  <Badge variant="secondary" className="text-xs">
-                    {userProfile.role === "community_lead"
-                      ? "Community Lead"
-                      : "Student"}
-                  </Badge>
+                {/* Desktop User Dropdown */}
+                <div className="hidden md:block">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="flex items-center space-x-2 h-auto p-2">
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-foreground">
+                            {userProfile && userProfile.name
+                              ? userProfile.name
+                              : "User"}
+                          </p>
+                          <Badge variant="secondary" className="text-xs">
+                            {userProfile.role === "community_lead"
+                              ? "Community Lead"
+                              : "Student"}
+                          </Badge>
+                        </div>
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>
+                            {userProfile && userProfile.name
+                              ? userProfile.name.charAt(0).toUpperCase()
+                              : "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="flex items-center">
+                          <User className="mr-2 h-4 w-4" />
+                          Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="flex items-center">
+                          <Settings className="mr-2 h-4 w-4" />
+                          Settings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>
-                    {userProfile && userProfile.name
-                      ? userProfile.name.charAt(0).toUpperCase()
-                      : "U"}
-                  </AvatarFallback>
-                </Avatar>
               </div>
             ) : (
               <div className="hidden md:flex items-center space-x-2">

@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, EyeOff, Mail, Lock, User, Phone, Building } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Phone, Building, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/contexts/AuthContext";
@@ -120,6 +120,7 @@ export function SignupForm({ onSignup }: SignupFormProps) {
 
   const studentForm = useForm<StudentSignupData>({
     resolver: zodResolver(studentSignupSchema),
+    mode: "onSubmit", // Only validate on submit to improve performance
     defaultValues: {
       name: "",
       email: "",
@@ -133,6 +134,7 @@ export function SignupForm({ onSignup }: SignupFormProps) {
 
   const leadForm = useForm<CommunityLeadSignupData>({
     resolver: zodResolver(communityLeadSignupSchema),
+    mode: "onSubmit", // Only validate on submit to improve performance
     defaultValues: {
       name: "",
       email: "",
@@ -151,6 +153,12 @@ export function SignupForm({ onSignup }: SignupFormProps) {
     try {
       // Extract data for profile creation, excluding confirmPassword
       const { confirmPassword, ...userData } = data;
+
+      // Show immediate feedback
+      toast({
+        title: "Creating your account...",
+        description: "Please wait while we set up your student profile.",
+      });
 
       // Register student using Auth context
       await signUp(data.email, data.password, {
@@ -178,6 +186,10 @@ export function SignupForm({ onSignup }: SignupFormProps) {
       if (error.code === "auth/email-already-in-use") {
         errorMessage =
           "This email is already registered. Try logging in instead.";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password is too weak. Please choose a stronger password.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address format.";
       }
 
       toast({
@@ -195,6 +207,12 @@ export function SignupForm({ onSignup }: SignupFormProps) {
     try {
       // Extract data for profile creation, excluding confirmPassword
       const { confirmPassword, ...userData } = data;
+
+      // Show immediate feedback
+      toast({
+        title: "Submitting your application...",
+        description: "Please wait while we process your community lead application.",
+      });
 
       // Register community lead using Auth context
       await signUp(data.email, data.password, {
@@ -222,6 +240,10 @@ export function SignupForm({ onSignup }: SignupFormProps) {
       if (error.code === "auth/email-already-in-use") {
         errorMessage =
           "This email is already registered. Try logging in instead.";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password is too weak. Please choose a stronger password.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address format.";
       }
 
       toast({
@@ -255,16 +277,17 @@ export function SignupForm({ onSignup }: SignupFormProps) {
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="student">Student</TabsTrigger>
-            <TabsTrigger value="community_lead">Community Lead</TabsTrigger>
+            <TabsTrigger value="student" disabled={isLoading}>Student</TabsTrigger>
+            <TabsTrigger value="community_lead" disabled={isLoading}>Community Lead</TabsTrigger>
           </TabsList>
 
           <TabsContent value="student">
             <Form {...studentForm}>
-              <form
-                onSubmit={studentForm.handleSubmit(handleStudentSubmit)}
-                className="space-y-4"
-              >
+              <fieldset disabled={isLoading} className="space-y-4">
+                <form
+                  onSubmit={studentForm.handleSubmit(handleStudentSubmit)}
+                  className="space-y-4"
+                >
                 <FormField
                   control={studentForm.control}
                   name="name"
@@ -466,18 +489,21 @@ export function SignupForm({ onSignup }: SignupFormProps) {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isLoading ? "Creating Account..." : "Create Student Account"}
                 </Button>
-              </form>
+                </form>
+              </fieldset>
             </Form>
           </TabsContent>
 
           <TabsContent value="community_lead">
             <Form {...leadForm}>
-              <form
-                onSubmit={leadForm.handleSubmit(handleLeadSubmit)}
-                className="space-y-4"
-              >
+              <fieldset disabled={isLoading} className="space-y-4">
+                <form
+                  onSubmit={leadForm.handleSubmit(handleLeadSubmit)}
+                  className="space-y-4"
+                >
                 <FormField
                   control={leadForm.control}
                   name="name"
@@ -737,11 +763,13 @@ export function SignupForm({ onSignup }: SignupFormProps) {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isLoading
                     ? "Submitting Application..."
                     : "Apply as Community Lead"}
                 </Button>
-              </form>
+                </form>
+              </fieldset>
             </Form>
           </TabsContent>
         </Tabs>

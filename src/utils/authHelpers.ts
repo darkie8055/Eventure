@@ -176,8 +176,13 @@ export async function getOrCreateUserProfile(
   firebaseUser: FirebaseUser
 ): Promise<UserProfile> {
   try {
-    // First try to get the profile from Firestore
-    const profile = await fetchUserProfile(db, firebaseUser.uid);
+    // First try to get the profile from Firestore with a timeout
+    const profilePromise = fetchUserProfile(db, firebaseUser.uid);
+    const timeoutPromise = new Promise<null>((_, reject) => 
+      setTimeout(() => reject(new Error('timeout')), 3000)
+    );
+    
+    const profile = await Promise.race([profilePromise, timeoutPromise]);
 
     if (profile) {
       console.log("Found user profile in Firestore:", profile.role);
@@ -193,10 +198,10 @@ export async function getOrCreateUserProfile(
 
     return createFallbackProfile(firebaseUser, role, additionalData);
   } catch (error: any) {
-    if (error.code === "permission-denied") {
-      // For permission errors, create a fallback profile
+    if (error.code === "permission-denied" || error.message === 'timeout') {
+      // For permission errors or timeouts, create a fallback profile
       console.warn(
-        "Permission denied when fetching profile. Using Auth data only."
+        "Permission denied or timeout when fetching profile. Using Auth data only."
       );
 
       // Try to detect user role from their email

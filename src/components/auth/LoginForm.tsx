@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -48,6 +48,11 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, setEnableAutoLogin } = useAuth();
   const router = useRouter();
+
+  // Enable auto-login by default for better UX
+  useEffect(() => {
+    setEnableAutoLogin(true);
+  }, [setEnableAutoLogin]);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -194,6 +199,7 @@ export function LoginForm({
                   id="remember-me"
                   type="checkbox"
                   className="rounded border-border"
+                  defaultChecked={true}
                   onChange={(e) => setEnableAutoLogin(e.target.checked)}
                 />
                 <span>Remember me</span>
