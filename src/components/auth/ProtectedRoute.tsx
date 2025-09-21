@@ -43,6 +43,8 @@ export function ProtectedRoute({
           } else {
             router.push("/community-dashboard");
           }
+        } else if (userProfile.role === "admin") {
+          router.push("/admin-dashboard");
         } else {
           // Fallback if unknown role
           router.push("/login");

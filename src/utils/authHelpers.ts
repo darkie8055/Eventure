@@ -100,10 +100,33 @@ function detectUserRole(email: string | null): {
 
   const emailLower = email.toLowerCase();
 
+  // Check for admin patterns in email (highest priority)
+  const adminPatterns = [
+    "admin@",
+    "administrator@",
+    "root@",
+    "sysadmin@",
+    "superuser@",
+    "admin.",
+    ".admin@",
+  ];
+
+  const isAdminEmail = adminPatterns.some((pattern) =>
+    emailLower.includes(pattern)
+  );
+
+  if (isAdminEmail) {
+    return {
+      role: "admin",
+      additionalData: {
+        isVerified: true, // Admins are automatically verified
+      },
+    };
+  }
+
   // Check for community lead patterns in email
   const communityPatterns = [
     "lead",
-    "admin",
     "president",
     "chair",
     "secretary",

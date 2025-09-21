@@ -14,7 +14,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (isAuthenticated && userProfile) {
       // Redirect based on user role
-      if (userProfile.role === "student") {
+      if (userProfile.role === "admin") {
+        router.push("/admin-dashboard");
+      } else if (userProfile.role === "student") {
         router.push("/student-dashboard");
       } else if (userProfile.role === "community_lead") {
         // If community lead is not verified, redirect to verification page

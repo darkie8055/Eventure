@@ -55,11 +55,25 @@ export function Navigation() {
     { path: "/community/chat", label: "Messages", icon: MessageCircle },
   ];
 
+  const adminNavItems = [
+    { path: "/admin-dashboard", label: "Admin Dashboard", icon: Settings },
+    { path: "/admin/users", label: "User Management", icon: Users },
+    { path: "/admin/communities", label: "Communities", icon: Users },
+    { path: "/admin/reports", label: "Reports", icon: FileText },
+  ];
+
   // Get the appropriate nav items based on user role and verification status
-  const navItems =
-    userProfile?.role === "community_lead" && userProfile?.isVerified
-      ? communityLeadNavItems
-      : studentNavItems;
+  const getNavItems = () => {
+    if (userProfile?.role === "admin") {
+      return adminNavItems;
+    }
+    if (userProfile?.role === "community_lead" && userProfile?.isVerified === true) {
+      return communityLeadNavItems;
+    }
+    return studentNavItems;
+  };
+
+  const navItems = getNavItems();
 
   const isActivePath = (path: string) => pathname === path;
 
@@ -126,7 +140,9 @@ export function Navigation() {
                               : "User"}
                           </p>
                           <Badge variant="secondary" className="text-xs">
-                            {userProfile.role === "community_lead"
+                            {userProfile.role === "admin"
+                              ? "Administrator"
+                              : userProfile.role === "community_lead" && userProfile.isVerified === true
                               ? "Community Lead"
                               : "Student"}
                           </Badge>
@@ -224,7 +240,7 @@ export function Navigation() {
                   })}
 
                   {userProfile.role === "community_lead" &&
-                    userProfile.isVerified && (
+                    userProfile.isVerified === true && (
                       <Button className="mx-4 gap-2" asChild>
                         <Link
                           href="/events/create"
@@ -252,7 +268,9 @@ export function Navigation() {
                             : "User"}
                         </p>
                         <Badge variant="secondary" className="text-xs">
-                          {userProfile.role === "community_lead"
+                          {userProfile.role === "admin"
+                            ? "Administrator"
+                            : userProfile.role === "community_lead" && userProfile.isVerified === true
                             ? "Community Lead"
                             : "Student"}
                         </Badge>

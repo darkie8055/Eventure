@@ -18,7 +18,7 @@ import {
 } from "@/utils/authHelpers";
 
 // Define types for user roles
-export type UserRole = "student" | "community_lead";
+export type UserRole = "student" | "community_lead" | "admin";
 
 // User profile interface
 export interface UserProfile {
@@ -240,6 +240,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         uid: userCredential.user.uid,
         email: userCredential.user.email,
         ...userData,
+        // Ensure community leads start as unverified
+        isVerified: userData.role === "community_lead" ? false : userData.isVerified,
         createdAt: new Date().toISOString(),
       };
 
