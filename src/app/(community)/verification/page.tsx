@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { Navigation } from "@/components/layout/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +36,7 @@ import {
   User,
   Mail,
   Phone,
+  Home,
 } from "lucide-react";
 
 interface VerificationDocument {
@@ -98,6 +98,7 @@ export default function CommunityVerificationPage() {
   const { userProfile, signOut } = useAuth();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<
     "not_started" | "pending" | "approved"
   >("not_started");
@@ -266,13 +267,8 @@ export default function CommunityVerificationPage() {
         // Save verification documents and other data
         console.log("Submitting verification:", formData, documents);
 
-        // Show success message
-        alert(
-          "Verification submitted successfully! Your application is now being reviewed."
-        );
-
-        // Refresh the page to show pending status
-        window.location.reload();
+        // Set submitted state to show success UI
+        setIsSubmitted(true);
       }
     } catch (error) {
       console.error("Error submitting verification:", error);
@@ -982,17 +978,95 @@ export default function CommunityVerificationPage() {
   return (
     <ProtectedRoute allowedRoles={["community_lead"]}>
       <div className="min-h-screen bg-background">
-        <Navigation />
+        {/* Simple Header */}
+        <div className="border-b border-border/50 bg-background/80 backdrop-blur-xl">
+          <div className="container mx-auto px-4 h-16 flex items-center">
+            <div className="flex items-center space-x-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-glow">
+                <span className="text-sm font-bold text-primary-foreground">E</span>
+              </div>
+              <span className="text-xl font-bold gradient-text">Eventure</span>
+            </div>
+          </div>
+        </div>
         
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold gradient-text mb-2">
-              Community Verification Application
-            </h1>
-            <p className="text-muted-foreground">
-              Complete this form to get your community officially verified and start organizing events
-            </p>
-          </div>
+          {isSubmitted ? (
+            /* Success State */
+            <div className="flex flex-col items-center justify-center min-h-[600px] text-center">
+              <div className="mb-8">
+                <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                  <CheckCircle className="w-10 h-10 text-green-600" />
+                </div>
+                <h1 className="text-3xl font-bold gradient-text mb-4">
+                  Application Submitted Successfully!
+                </h1>
+                <p className="text-lg text-muted-foreground mb-6 max-w-2xl">
+                  Thank you for submitting your community verification application. Our team will review your submission and get back to you within 3-5 business days.
+                </p>
+              </div>
+
+              <Card className="w-full max-w-2xl card-elevated">
+                <CardContent className="p-8">
+                  <h3 className="text-xl font-semibold mb-4">What happens next?</h3>
+                  <div className="space-y-4 text-left">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                        <span className="text-xs font-bold text-primary">1</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">Review Process</p>
+                        <p className="text-sm text-muted-foreground">Our team will review your application and verify the provided information.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                        <span className="text-xs font-bold text-primary">2</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">Faculty Advisor Confirmation</p>
+                        <p className="text-sm text-muted-foreground">Your faculty advisor will receive an email to confirm their support.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                        <span className="text-xs font-bold text-primary">3</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">Notification</p>
+                        <p className="text-sm text-muted-foreground">You&apos;ll receive an email notification once your application is approved.</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="mt-8 flex gap-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsSubmitted(false)}
+                  className="gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  View Application
+                </Button>
+                <Button onClick={() => router.push('/')} className="gap-2">
+                  <Home className="w-4 h-4" />
+                  Home
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* Normal Form State */
+            <>
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold gradient-text mb-2">
+                  Community Verification Application
+                </h1>
+                <p className="text-muted-foreground">
+                  Complete this form to get your community officially verified and start organizing events
+                </p>
+              </div>
 
           {/* Progress Bar */}
           <Card className="card-elevated mb-8">
@@ -1072,6 +1146,8 @@ export default function CommunityVerificationPage() {
               </Button>
             )}
           </div>
+            </>
+          )}
         </div>
       </div>
     </ProtectedRoute>
