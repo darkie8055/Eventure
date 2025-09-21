@@ -55,9 +55,9 @@ export function Navigation() {
     { path: "/community/chat", label: "Messages", icon: MessageCircle },
   ];
 
-  // Get the appropriate nav items based on user role
+  // Get the appropriate nav items based on user role and verification status
   const navItems =
-    userProfile?.role === "community_lead"
+    userProfile?.role === "community_lead" && userProfile?.isVerified
       ? communityLeadNavItems
       : studentNavItems;
 
@@ -145,13 +145,19 @@ export function Navigation() {
                       <DropdownMenuLabel>My Account</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link href="/profile" className="flex items-center">
+                        <Link 
+                          href={userProfile.role === "community_lead" ? "/community-profile" : "/student-profile"} 
+                          className="flex items-center"
+                        >
                           <User className="mr-2 h-4 w-4" />
                           Profile
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/profile" className="flex items-center">
+                        <Link 
+                          href={userProfile.role === "community_lead" ? "/community-profile" : "/student-profile"} 
+                          className="flex items-center"
+                        >
                           <Settings className="mr-2 h-4 w-4" />
                           Settings
                         </Link>

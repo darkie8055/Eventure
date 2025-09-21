@@ -323,7 +323,7 @@ const Communities = () => {
                   <div className="flex items-center gap-3">
                     <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
                       community.rank === 1 ? 'bg-yellow-500/20 text-yellow-500' :
-                      community.rank === 2 ? 'bg-gray-500/20 text-gray-400' :
+                      community.rank === 2 ? 'bg-muted/50 text-muted-foreground' :
                       community.rank === 3 ? 'bg-orange-500/20 text-orange-500' :
                       'bg-muted text-muted-foreground'
                     }`}>

@@ -462,7 +462,7 @@ const CommunityDashboard = () => {
                             community.rank === 1
                               ? "bg-yellow-500/20 text-yellow-500"
                               : community.rank === 2
-                              ? "bg-gray-500/20 text-gray-400"
+                              ? "bg-muted/50 text-muted-foreground"
                               : community.rank === 3
                               ? "bg-orange-500/20 text-orange-500"
                               : "bg-muted text-muted-foreground"

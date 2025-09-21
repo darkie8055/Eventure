@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { Navigation } from "@/components/layout/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -287,20 +288,17 @@ export default function CommunityVerificationPage() {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold mb-2 gradient-text">
                 Personal Information
               </h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Please provide your personal details as the community lead.
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <Label
-                  htmlFor="fullName"
-                  className="text-slate-700 font-medium"
-                >
+                <Label htmlFor="fullName">
                   Full Name *
                 </Label>
                 <Input
@@ -313,7 +311,7 @@ export default function CommunityVerificationPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="email" className="text-slate-700 font-medium">
+                <Label htmlFor="email">
                   Email Address *
                 </Label>
                 <Input
@@ -325,7 +323,7 @@ export default function CommunityVerificationPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="phone" className="text-slate-700 font-medium">
+                <Label htmlFor="phone">
                   Phone Number *
                 </Label>
                 <Input
@@ -338,7 +336,6 @@ export default function CommunityVerificationPage() {
               <div>
                 <Label
                   htmlFor="studentId"
-                  className="text-slate-700 font-medium"
                 >
                   Student ID *
                 </Label>
@@ -354,7 +351,6 @@ export default function CommunityVerificationPage() {
               <div>
                 <Label
                   htmlFor="department"
-                  className="text-slate-700 font-medium"
                 >
                   Department *
                 </Label>
@@ -383,7 +379,6 @@ export default function CommunityVerificationPage() {
               <div>
                 <Label
                   htmlFor="yearOfStudy"
-                  className="text-slate-700 font-medium"
                 >
                   Year of Study *
                 </Label>
@@ -408,7 +403,6 @@ export default function CommunityVerificationPage() {
               <div>
                 <Label
                   htmlFor="position"
-                  className="text-slate-700 font-medium"
                 >
                   Intended Position *
                 </Label>
@@ -441,10 +435,10 @@ export default function CommunityVerificationPage() {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold mb-2 gradient-text">
                 Community Details
               </h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Provide detailed information about your community.
               </p>
             </div>
@@ -454,7 +448,6 @@ export default function CommunityVerificationPage() {
                 <div>
                   <Label
                     htmlFor="communityName"
-                    className="text-slate-700 font-medium"
                   >
                     Community Name *
                   </Label>
@@ -470,7 +463,6 @@ export default function CommunityVerificationPage() {
                 <div>
                   <Label
                     htmlFor="communityCategory"
-                    className="text-slate-700 font-medium"
                   >
                     Category *
                   </Label>
@@ -505,7 +497,6 @@ export default function CommunityVerificationPage() {
                 <div>
                   <Label
                     htmlFor="communityType"
-                    className="text-slate-700 font-medium"
                   >
                     Community Type *
                   </Label>
@@ -538,7 +529,6 @@ export default function CommunityVerificationPage() {
                 <div>
                   <Label
                     htmlFor="expectedMembers"
-                    className="text-slate-700 font-medium"
                   >
                     Expected Members *
                   </Label>
@@ -565,7 +555,6 @@ export default function CommunityVerificationPage() {
               <div>
                 <Label
                   htmlFor="communityDescription"
-                  className="text-slate-700 font-medium"
                 >
                   Community Description *
                 </Label>
@@ -583,7 +572,6 @@ export default function CommunityVerificationPage() {
               <div>
                 <Label
                   htmlFor="communityGoals"
-                  className="text-slate-700 font-medium"
                 >
                   Community Goals & Objectives *
                 </Label>
@@ -601,7 +589,6 @@ export default function CommunityVerificationPage() {
               <div>
                 <Label
                   htmlFor="plannedActivities"
-                  className="text-slate-700 font-medium"
                 >
                   Planned Activities *
                 </Label>
@@ -619,7 +606,6 @@ export default function CommunityVerificationPage() {
               <div>
                 <Label
                   htmlFor="benefitsToStudents"
-                  className="text-slate-700 font-medium"
                 >
                   Benefits to Students *
                 </Label>
@@ -641,10 +627,10 @@ export default function CommunityVerificationPage() {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold mb-2 gradient-text">
                 Faculty Advisor & Administrative Details
               </h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Every community requires a faculty advisor for verification.
               </p>
             </div>
@@ -672,7 +658,6 @@ export default function CommunityVerificationPage() {
                 <div>
                   <Label
                     htmlFor="facultyAdvisorName"
-                    className="text-slate-700 font-medium"
                   >
                     Faculty Advisor Name *
                   </Label>
@@ -688,7 +673,6 @@ export default function CommunityVerificationPage() {
                 <div>
                   <Label
                     htmlFor="facultyAdvisorEmail"
-                    className="text-slate-700 font-medium"
                   >
                     Faculty Advisor Email *
                   </Label>
@@ -705,7 +689,6 @@ export default function CommunityVerificationPage() {
                 <div>
                   <Label
                     htmlFor="facultyAdvisorDepartment"
-                    className="text-slate-700 font-medium"
                   >
                     Advisor Department *
                   </Label>
@@ -724,7 +707,6 @@ export default function CommunityVerificationPage() {
                 <div>
                   <Label
                     htmlFor="facultyAdvisorPhone"
-                    className="text-slate-700 font-medium"
                   >
                     Advisor Phone
                   </Label>
@@ -743,7 +725,6 @@ export default function CommunityVerificationPage() {
                 <div>
                   <Label
                     htmlFor="meetingFrequency"
-                    className="text-slate-700 font-medium"
                   >
                     Meeting Frequency *
                   </Label>
@@ -768,7 +749,6 @@ export default function CommunityVerificationPage() {
                 <div>
                   <Label
                     htmlFor="meetingLocation"
-                    className="text-slate-700 font-medium"
                   >
                     Meeting Location *
                   </Label>
@@ -784,7 +764,7 @@ export default function CommunityVerificationPage() {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-slate-700 font-medium">
+                <Label>
                   Required Documents Status
                 </Label>
                 <div className="space-y-3">
@@ -798,7 +778,7 @@ export default function CommunityVerificationPage() {
                     />
                     <label
                       htmlFor="constitution"
-                      className="text-sm text-slate-700"
+                      className="text-sm text-muted-foreground"
                     >
                       I have prepared a community constitution outlining rules,
                       structure, and governance
@@ -814,7 +794,7 @@ export default function CommunityVerificationPage() {
                     />
                     <label
                       htmlFor="budgetPlan"
-                      className="text-sm text-slate-700"
+                      className="text-sm text-muted-foreground"
                     >
                       I have prepared a budget plan for community activities and
                       events
@@ -824,7 +804,7 @@ export default function CommunityVerificationPage() {
               </div>
 
               <div>
-                <Label className="text-slate-700 font-medium">
+                <Label>
                   Social Media Links (Optional)
                 </Label>
                 <div className="grid md:grid-cols-2 gap-4 mt-2">
@@ -874,10 +854,10 @@ export default function CommunityVerificationPage() {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold mb-2 gradient-text">
                 Document Upload
               </h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Upload the required documents for verification.
               </p>
             </div>
@@ -913,7 +893,7 @@ export default function CommunityVerificationPage() {
                           {doc.uploaded ? (
                             <CheckCircle className="h-5 w-5 text-green-600" />
                           ) : (
-                            <FileText className="h-5 w-5 text-gray-600" />
+                            <FileText className="h-5 w-5 text-muted-foreground" />
                           )}
                         </div>
                         <div>
@@ -930,7 +910,7 @@ export default function CommunityVerificationPage() {
                             </Badge>
                           </h4>
                           {doc.uploaded && doc.size && (
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                               Size: {doc.size}
                             </p>
                           )}
@@ -1001,56 +981,56 @@ export default function CommunityVerificationPage() {
 
   return (
     <ProtectedRoute allowedRoles={["community_lead"]}>
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold gradient-text mb-2">
               Community Verification Application
             </h1>
-            <p className="text-gray-600">
-              Complete this form to get your community officially verified and
-              start organizing events
+            <p className="text-muted-foreground">
+              Complete this form to get your community officially verified and start organizing events
             </p>
           </div>
 
           {/* Progress Bar */}
-          <Card className="mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <Card className="card-elevated mb-8">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium">
                   Step {currentStep} of {totalSteps}
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-muted-foreground">
                   {Math.round(progress)}% Complete
                 </span>
               </div>
               <Progress value={progress} className="h-2" />
-              <div className="flex justify-between mt-4 text-xs text-gray-500">
+              <div className="flex justify-between mt-4 text-xs text-muted-foreground">
                 <span
                   className={
-                    currentStep >= 1 ? "text-purple-600 font-semibold" : ""
+                    currentStep >= 1 ? "text-primary font-semibold" : ""
                   }
                 >
                   Personal Info
                 </span>
                 <span
                   className={
-                    currentStep >= 2 ? "text-purple-600 font-semibold" : ""
+                    currentStep >= 2 ? "text-primary font-semibold" : ""
                   }
                 >
                   Community Details
                 </span>
                 <span
                   className={
-                    currentStep >= 3 ? "text-purple-600 font-semibold" : ""
+                    currentStep >= 3 ? "text-primary font-semibold" : ""
                   }
                 >
                   Faculty Advisor
                 </span>
                 <span
                   className={
-                    currentStep >= 4 ? "text-purple-600 font-semibold" : ""
+                    currentStep >= 4 ? "text-primary font-semibold" : ""
                   }
                 >
                   Documents
@@ -1060,7 +1040,7 @@ export default function CommunityVerificationPage() {
           </Card>
 
           {/* Form Content */}
-          <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <Card className="card-elevated">
             <CardContent className="p-8">{renderStepContent()}</CardContent>
           </Card>
 
@@ -1078,14 +1058,14 @@ export default function CommunityVerificationPage() {
             {currentStep < totalSteps ? (
               <Button
                 onClick={nextStep}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 flex items-center gap-2"
+                className="flex items-center gap-2"
               >
                 Next Step
               </Button>
             ) : (
               <Button
                 onClick={submitVerification}
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 flex items-center gap-2"
+                className="flex items-center gap-2"
               >
                 <CheckCircle className="h-4 w-4" />
                 Submit Application
