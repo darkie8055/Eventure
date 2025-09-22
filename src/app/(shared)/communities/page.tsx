@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navigation } from '@/components/layout/Navigation';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,6 @@ import {
   Search, 
   Users, 
   Calendar, 
-  MessageCircle, 
   Trophy,
   Filter,
   Star,
@@ -22,267 +22,192 @@ import {
   Plus,
   Crown
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-// Mock user data
-const mockUser = {
-  name: 'Alex Johnson',
-  email: 'alex@student.college.edu',
-  role: 'student' as const,
-  avatar: '/placeholder.svg'
-};
-
-// Mock communities data
-const mockCommunities = [
-  {
-    id: '1',
-    name: 'IEEE Student Branch',
-    type: 'Technical',
-    description: 'Advancing technology for humanity through innovation and excellence.',
-    members: 250,
-    events: 15,
-    college: 'Government Engineering College',
-    rank: 1,
-    avatar: '/placeholder.svg',
-    isJoined: true,
-    recentActivity: '2 hours ago',
-    lead: {
-      name: 'Sarah Wilson',
-      avatar: '/placeholder.svg'
-    }
-  },
-  {
-    id: '2',
-    name: 'Coding Club',
-    type: 'Technical',
-    description: 'Learn, code, and create amazing projects together.',
-    members: 180,
-    events: 8,
-    college: 'Government Engineering College',
-    rank: 5,
-    avatar: '/placeholder.svg',
-    isJoined: true,
-    recentActivity: '1 day ago',
-    lead: {
-      name: 'Mike Chen',
-      avatar: '/placeholder.svg'
-    }
-  },
-  {
-    id: '3',
-    name: 'Cultural Committee',
-    type: 'Cultural',
-    description: 'Celebrating diversity through arts, music, and cultural events.',
-    members: 320,
-    events: 18,
-    college: 'Government Engineering College',
-    rank: 2,
-    avatar: '/placeholder.svg',
-    isJoined: false,
-    recentActivity: '3 hours ago',
-    lead: {
-      name: 'Priya Sharma',
-      avatar: '/placeholder.svg'
-    }
-  },
-  {
-    id: '4',
-    name: 'NSS Unit',
-    type: 'Social',
-    description: 'Not me, but you. Serving society through volunteer work.',
-    members: 145,
-    events: 10,
-    college: 'Government Engineering College',
-    rank: 4,
-    avatar: '/placeholder.svg',
-    isJoined: false,
-    recentActivity: '5 hours ago',
-    lead: {
-      name: 'Rahul Kumar',
-      avatar: '/placeholder.svg'
-    }
-  },
-  {
-    id: '5',
-    name: 'Innovation Cell',
-    type: 'Technical',
-    description: 'Fostering innovation and entrepreneurship among students.',
-    members: 98,
-    events: 6,
-    college: 'Government Engineering College',
-    rank: 7,
-    avatar: '/placeholder.svg',
-    isJoined: false,
-    recentActivity: '1 day ago',
-    lead: {
-      name: 'Anita Patel',
-      avatar: '/placeholder.svg'
-    }
-  }
-];
-
-// Mock leaderboard data
-const leaderboardData = mockCommunities
-  .sort((a, b) => a.rank - b.rank)
-  .slice(0, 10);
-
-const Communities = () => {
+export default function Communities() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
-  const [activeTab, setActiveTab] = useState('all');
+  const [communities, setCommunities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, userProfile } = useAuth();
 
-  const filteredCommunities = mockCommunities.filter(community => {
-    const matchesSearch = community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         community.description.toLowerCase().includes(searchTerm.toLowerCase());
+  // Fetch communities from Firebase
+  useEffect(() => {
+    const communitiesRef = collection(db, 'communities');
+    const communitiesQuery = query(communitiesRef, orderBy('name', 'asc'));
+
+    const unsubscribe = onSnapshot(communitiesQuery, (snapshot) => {
+      const fetchedCommunities: any[] = [];
+      snapshot.forEach((doc) => {
+        fetchedCommunities.push({ id: doc.id, ...doc.data() });
+      });
+      setCommunities(fetchedCommunities);
+      setLoading(false);
+    }, (error) => {
+      console.error('Error fetching communities:', error);
+      setCommunities([]);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const filteredCommunities = communities.filter(community => {
+    const matchesSearch = community.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         community.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'all' || community.type === selectedType;
-    const matchesTab = activeTab === 'all' || 
-                      (activeTab === 'joined' && community.isJoined) ||
-                      (activeTab === 'available' && !community.isJoined);
-    
-    return matchesSearch && matchesType && matchesTab;
+    return matchesSearch && matchesType;
   });
 
-  const communityTypes = ['all', 'Technical', 'Cultural', 'Social', 'Sports'];
+  const communityTypes = Array.from(new Set(communities.map(c => c.type).filter(Boolean)));
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation user={mockUser} />
-      
-      <div className="container mx-auto px-4 py-8">
+    <ProtectedRoute allowedRoles={["student", "community_lead"]}>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        
+        <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold gradient-text mb-4">Communities</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Join vibrant communities, connect with like-minded students, and participate in amazing events.
-            Build your network and enhance your college experience.
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold gradient-text mb-4">
+            Join Communities
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Connect with like-minded students, participate in exciting events, and build lasting friendships 
+            through our vibrant community network.
           </p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search communities..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="px-4 py-2 rounded-md border border-input bg-background text-foreground"
-            >
-              {communityTypes.map(type => (
-                <option key={type} value={type}>
-                  {type === 'all' ? 'All Types' : type}
-                </option>
-              ))}
-            </select>
-            
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              More Filters
-            </Button>
-          </div>
-        </div>
+        <Tabs defaultValue="all" className="space-y-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <TabsList className="grid w-full max-w-md grid-cols-4">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="joined">Joined</TabsTrigger>
+              <TabsTrigger value="trending">Trending</TabsTrigger>
+              <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            </TabsList>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid w-full md:w-auto grid-cols-3">
-            <TabsTrigger value="all">All Communities</TabsTrigger>
-            <TabsTrigger value="joined">Joined</TabsTrigger>
-            <TabsTrigger value="available">Available</TabsTrigger>
-          </TabsList>
+            <div className="flex gap-4 w-full md:w-auto">
+              <div className="relative flex-1 md:w-80">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Search communities..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="px-3 py-2 border border-border rounded-md bg-background"
+              >
+                <option value="all">All Types</option>
+                {communityTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-          <TabsContent value={activeTab} className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCommunities.map((community) => (
-                <Card key={community.id} className="card-elevated hover:shadow-lg transition-all duration-300">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={community.avatar} alt={community.name} />
-                          <AvatarFallback>{community.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            {community.name}
-                            {community.rank <= 3 && (
-                              <Crown className="h-4 w-4 text-yellow-500" />
-                            )}
-                          </CardTitle>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              {community.type}
-                            </Badge>
+          <TabsContent value="all" className="space-y-6">
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="p-6">
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-muted rounded w-1/2 mb-4"></div>
+                      <div className="h-20 bg-muted rounded mb-4"></div>
+                      <div className="h-3 bg-muted rounded w-full mb-2"></div>
+                      <div className="h-3 bg-muted rounded w-2/3"></div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : filteredCommunities.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="max-w-md mx-auto">
+                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                    <Users className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No communities found</h3>
+                  <p className="text-muted-foreground mb-6">
+                    {searchTerm || selectedType !== 'all'
+                      ? 'Try adjusting your search criteria.'
+                      : 'No communities are currently available.'}
+                  </p>
+                  {(searchTerm || selectedType !== 'all') && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSelectedType('all');
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCommunities.map((community) => (
+                  <Card key={community.id} className="card-elevated hover:shadow-lg transition-all duration-200">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={community.avatar} alt={community.name} />
+                            <AvatarFallback>{community.name?.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <CardTitle className="text-lg">{community.name}</CardTitle>
                             <Badge variant="secondary" className="text-xs">
-                              Rank #{community.rank}
+                              {community.type}
                             </Badge>
                           </div>
                         </div>
+                        {community.rank === 1 && (
+                          <Crown className="h-5 w-5 text-yellow-500" />
+                        )}
                       </div>
-                    </div>
-                    <CardDescription className="mt-3">
-                      {community.description}
-                    </CardDescription>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Stats */}
-                      <div className="flex items-center justify-between text-sm">
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      <CardDescription className="text-sm line-clamp-2">
+                        {community.description}
+                      </CardDescription>
+
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4 text-primary" />
-                          <span>{community.members} members</span>
+                          <Users className="h-4 w-4" />
+                          <span>{community.members || 0} members</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4 text-primary" />
-                          <span>{community.events} events</span>
+                          <Calendar className="h-4 w-4" />
+                          <span>{community.events || 0} events</span>
                         </div>
                       </div>
 
-                      {/* College */}
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
-                        <span>{community.college}</span>
-                      </div>
-
-                      {/* Community Lead */}
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={community.lead.avatar} alt={community.lead.name} />
-                          <AvatarFallback className="text-xs">{community.lead.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-muted-foreground">
-                          Led by {community.lead.name}
-                        </span>
-                      </div>
-
-                      {/* Recent Activity */}
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Active {community.recentActivity}</span>
-                        <div className="flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          <span>Growing</span>
+                      {community.college && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          <span className="truncate">{community.college}</span>
                         </div>
-                      </div>
+                      )}
 
                       {/* Actions */}
                       <div className="flex gap-2 pt-2">
                         {community.isJoined ? (
                           <>
-                            <Button asChild size="sm" variant="outline" className="flex-1 gap-1">
-                              <Link href="/chat">
-                                <MessageCircle className="h-4 w-4" />
-                                Chat
-                              </Link>
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Star className="h-4 w-4" />
+                            <Button size="sm" variant="outline" className="flex-1">
+                              <Star className="h-4 w-4 mr-1" />
+                              Favorite
                             </Button>
                           </>
                         ) : (
@@ -297,65 +222,51 @@ const Communities = () => {
                           </>
                         )}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="joined" className="space-y-6">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Your joined communities will appear here.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="trending" className="space-y-6">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Trending communities will be displayed here.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="leaderboard" className="space-y-6">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Community leaderboard will be available soon.</p>
             </div>
           </TabsContent>
         </Tabs>
 
-        {/* Leaderboard Section */}
-        <Card className="card-elevated mt-12">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-500" />
-              Community Leaderboard
-            </CardTitle>
-            <CardDescription>
-              Top performing communities based on events and engagement
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {leaderboardData.slice(0, 5).map((community) => (
-                <div key={community.id} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                      community.rank === 1 ? 'bg-yellow-500/20 text-yellow-500' :
-                      community.rank === 2 ? 'bg-muted/50 text-muted-foreground' :
-                      community.rank === 3 ? 'bg-orange-500/20 text-orange-500' :
-                      'bg-muted text-muted-foreground'
-                    }`}>
-                      #{community.rank}
-                    </div>
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={community.avatar} alt={community.name} />
-                      <AvatarFallback>{community.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium text-foreground">{community.name}</div>
-                      <div className="text-sm text-muted-foreground">{community.type}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="text-center">
-                      <div className="font-medium text-foreground">{community.members}</div>
-                      <div className="text-muted-foreground">Members</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium text-foreground">{community.events}</div>
-                      <div className="text-muted-foreground">Events</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* CTA Section */}
+        <div className="mt-16 text-center">
+          <Card className="card-elevated max-w-2xl mx-auto">
+            <CardContent className="p-8">
+              <h3 className="text-xl font-semibold mb-4">
+                Want to create your own community?
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Start building your community today and connect with students who share your interests and passions.
+              </p>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create Community
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
-};
-
-export default Communities;
+}

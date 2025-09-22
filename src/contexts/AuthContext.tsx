@@ -52,8 +52,6 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
   hasRole: (roles: UserRole | UserRole[]) => boolean;
-  enableAutoLogin: boolean;
-  setEnableAutoLogin: (enable: boolean) => void;
 }
 
 // Create the auth context
@@ -64,28 +62,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [enableAutoLogin, setEnableAutoLogin] = useState(true); // Enable by default
   const router = useRouter();
   const currentUserRef = useRef<string | null>(null);
 
   // Listen for Firebase auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // Always set the user from Firebase Auth regardless of enableAutoLogin
-      // This ensures we have the authentication state correctly reflected
+      // Set the user from Firebase Auth
       setUser(firebaseUser);
 
       // If there's no user, clear the profile
       if (!firebaseUser) {
-        setUserProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      // If auto login is disabled but user is logged in, sign them out
-      if (!enableAutoLogin) {
-        await firebaseSignOut(auth);
-        setUser(null);
         setUserProfile(null);
         setLoading(false);
         return;
@@ -148,16 +135,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Cleanup subscription
     return () => unsubscribe();
-  }, [enableAutoLogin]); // Removed userProfile dependency to avoid infinite loops
+  }, []); // No dependencies needed
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      
-      // Temporarily enable auto-login to allow authentication to complete
-      const wasAutoLoginEnabled = enableAutoLogin;
-      setEnableAutoLogin(true);
 
       // Sign in with Firebase Authentication
       const userCredential = await signInWithEmailAndPassword(
@@ -192,13 +175,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
         
-        // Keep auto-login enabled if it was originally enabled (remember me was checked)
-        // This allows the user to stay logged in for future sessions
-        if (!wasAutoLoginEnabled) {
-          // If remember me wasn't checked, we keep auto-login enabled for this session
-          // but it won't persist for future sessions
-        }
-        
       } catch (error: any) {
         console.error("Error handling user profile:", error);
 
@@ -223,9 +199,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       setLoading(true);
-      
-      // Temporarily enable auto-login to allow registration to complete
-      setEnableAutoLogin(true);
       
       // Create user in Firebase Auth and profile in Firestore concurrently
       // This is safe because we know the user data structure
@@ -287,7 +260,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return userProfile.role === roles;
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     userProfile,
     loading,
@@ -296,8 +269,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     isAuthenticated: !!user,
     hasRole,
-    enableAutoLogin,
-    setEnableAutoLogin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

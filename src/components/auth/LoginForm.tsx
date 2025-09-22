@@ -46,13 +46,8 @@ export function LoginForm({
 }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, setEnableAutoLogin } = useAuth();
+  const { signIn } = useAuth();
   const router = useRouter();
-
-  // Enable auto-login by default for better UX
-  useEffect(() => {
-    setEnableAutoLogin(true);
-  }, [setEnableAutoLogin]);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -190,20 +185,7 @@ export function LoginForm({
               )}
             />
 
-            <div className="flex items-center justify-between">
-              <Label
-                htmlFor="remember-me"
-                className="flex items-center space-x-2 text-sm"
-              >
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  className="rounded border-border"
-                  defaultChecked={true}
-                  onChange={(e) => setEnableAutoLogin(e.target.checked)}
-                />
-                <span>Remember me</span>
-              </Label>
+            <div className="flex items-center justify-end">
               <Link
                 href="/forgot-password"
                 className="text-sm text-primary hover:text-primary-glow transition-colors"

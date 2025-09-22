@@ -9,7 +9,6 @@ import {
   Sparkles, 
   Star,
   Trophy,
-  MessageCircle,
   Zap,
   Shield,
   Smartphone,
@@ -339,24 +338,14 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageCircle className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="font-semibold mb-2">Real-time Chat</h3>
-              <p className="text-sm text-muted-foreground">
-                Connect instantly with event organizers and attendees
-              </p>
-            </div>
-            
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <div className="text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Zap className="w-8 h-8 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">Smart Notifications</h3>
               <p className="text-sm text-muted-foreground">
-                Never miss important updates or event reminders
+                Stay updated with important announcements and event updates
               </p>
             </div>
             
@@ -420,9 +409,6 @@ export default function Home() {
                 Connecting students, building communities, creating memories.
               </p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <MessageCircle className="w-4 h-4" />
-                </Button>
                 <Button variant="outline" size="sm">
                   <Users className="w-4 h-4" />
                 </Button>
