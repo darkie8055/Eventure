@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import {
   Upload,
   FileText,
@@ -38,6 +39,13 @@ import {
   Phone,
   Home,
 } from "lucide-react";
+import { db, auth } from "@/lib/firebase";
+import { 
+  collection, 
+  addDoc, 
+  doc, 
+  updateDoc 
+} from "firebase/firestore";
 
 interface VerificationDocument {
   id: string;
@@ -97,8 +105,10 @@ interface VerificationFormData {
 export default function CommunityVerificationPage() {
   const { userProfile, signOut } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<
     "not_started" | "pending" | "approved"
   >("not_started");
@@ -106,12 +116,14 @@ export default function CommunityVerificationPage() {
   useEffect(() => {
     // Check user profile and verification status
     if (userProfile) {
+      console.log("User profile found:", userProfile);
+      
       if (userProfile.isVerified) {
         // User is verified, redirect to community dashboard
         router.push("/community-dashboard");
       } else {
         // Set verification status to pending if user has submitted the form before
-        setVerificationStatus("pending");
+        setVerificationStatus("not_started");
 
         // Pre-fill form data from user profile
         if (userProfile.name) {
@@ -127,6 +139,8 @@ export default function CommunityVerificationPage() {
           }));
         }
       }
+    } else {
+      console.log("No user profile found");
     }
   }, [userProfile, router]);
 
@@ -256,25 +270,127 @@ export default function CommunityVerificationPage() {
     }
   };
 
-  const submitVerification = async () => {
+  const testFirestore = async () => {
     try {
-      // Update user profile with verification data
-      if (userProfile) {
-        // In a real app, you would update the user profile in Firestore
-        // For now, we'll just set the verification status to pending
-        setVerificationStatus("pending");
+      console.log("Testing basic Firestore write...");
+      const testData = {
+        test: "Hello Firestore",
+        timestamp: new Date().toISOString(),
+        userId: userProfile?.uid || "anonymous"
+      };
+      
+      const docRef = await addDoc(collection(db, "test_collection"), testData);
+      console.log("Test document created with ID:", docRef.id);
+      
+      toast({
+        title: "Firestore Test Successful",
+        description: `Test document created with ID: ${docRef.id}`,
+      });
+    } catch (error: any) {
+      console.error("Firestore test failed:", error);
+      toast({
+        title: "Firestore Test Failed",
+        description: `Error: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
 
-        // Save verification documents and other data
-        console.log("Submitting verification:", formData, documents);
+  const submitVerification = async () => {
+    console.log("Submit verification called");
+    
+    // Check Firebase Auth state
+    const firebaseUser = auth.currentUser;
+    console.log("Firebase Auth currentUser:", firebaseUser);
+    console.log("User authenticated:", !!firebaseUser);
+    console.log("User email:", firebaseUser?.email);
+    console.log("User UID:", firebaseUser?.uid);
+    
+    if (!firebaseUser) {
+      console.log("No Firebase user found - not authenticated");
+      toast({
+        title: "Authentication Required",
+        description: "Please log in again to submit your verification.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!userProfile) {
+      console.log("No user profile found");
+      toast({
+        title: "Error",
+        description: "User profile not found. Please try logging in again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-        // Set submitted state to show success UI
-        setIsSubmitted(true);
+    console.log("User profile exists:", userProfile);
+
+    setIsSubmitting(true);
+    
+    try {
+      console.log("Starting verification submission...");
+      
+      // Create a minimal verification request first
+      const minimalData = {
+        userId: firebaseUser.uid,
+        userEmail: firebaseUser.email,
+        role: "community_lead",
+        status: "pending",
+        submittedAt: new Date().toISOString(),
+        requestType: "minimal_test",
+        // Only include essential form fields
+        fullName: formData.fullName || "Test User",
+        email: formData.email || firebaseUser.email,
+        communityName: formData.communityName || "Test Community",
+      };
+
+      console.log("Minimal verification data:", minimalData);
+
+      const docRef = await addDoc(collection(db, "verification_requests"), minimalData);
+      console.log("Verification request created successfully with ID:", docRef.id);
+
+      // Update verification status
+      setVerificationStatus("pending");
+      setIsSubmitted(true);
+
+      toast({
+        title: "Verification submitted successfully!",
+        description: "Your application is now under review. You'll receive an email notification once approved.",
+      });
+
+      // Redirect to waiting screen after a short delay
+      setTimeout(() => {
+        router.push("/community-dashboard"); // This will trigger the waiting screen
+      }, 3000);
+      
+    } catch (error: any) {
+      console.error("Detailed error submitting verification:", error);
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
+      console.error("Full error object:", error);
+      
+      let errorMessage = "An error occurred while submitting your verification. Please try again.";
+      
+      if (error.code === "permission-denied") {
+        errorMessage = "Permission denied. Please check your authentication status.";
+      } else if (error.code === "network-request-failed") {
+        errorMessage = "Network error. Please check your internet connection and try again.";
+      } else if (error.code === "unauthenticated") {
+        errorMessage = "Authentication required. Please log in again.";
+      } else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
       }
-    } catch (error) {
-      console.error("Error submitting verification:", error);
-      alert(
-        "An error occurred while submitting your verification. Please try again."
-      );
+      
+      toast({
+        title: "Submission failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -991,6 +1107,38 @@ export default function CommunityVerificationPage() {
         </div>
         
         <div className="container mx-auto px-4 py-8 max-w-4xl">
+          {/* Debug info for development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-4 bg-gray-100 rounded-lg text-sm">
+              <strong>Debug Info:</strong>
+              <br />
+              Firebase Auth User: {auth.currentUser ? 'Authenticated' : 'Not authenticated'}
+              <br />
+              Firebase User ID: {auth.currentUser?.uid || 'N/A'}
+              <br />
+              Firebase User Email: {auth.currentUser?.email || 'N/A'}
+              <br />
+              User Profile: {userProfile ? 'Found' : 'Not found'}
+              <br />
+              User ID: {userProfile?.uid || 'N/A'}
+              <br />
+              User Email: {userProfile?.email || 'N/A'}
+              <br />
+              User Role: {userProfile?.role || 'N/A'}
+              <br />
+              Verified: {userProfile?.isVerified ? 'Yes' : 'No'}
+              <br />
+              <Button 
+                onClick={testFirestore} 
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+              >
+                Test Firestore Connection
+              </Button>
+            </div>
+          )}
+
           {isSubmitted ? (
             /* Success State */
             <div className="flex flex-col items-center justify-center min-h-[600px] text-center">
@@ -1139,10 +1287,20 @@ export default function CommunityVerificationPage() {
             ) : (
               <Button
                 onClick={submitVerification}
+                disabled={isSubmitting}
                 className="flex items-center gap-2"
               >
-                <CheckCircle className="h-4 w-4" />
-                Submit Application
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    Submit Application
+                  </>
+                )}
               </Button>
             )}
           </div>

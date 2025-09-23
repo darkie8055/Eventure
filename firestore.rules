@@ -65,5 +65,11 @@ service cloud.firestore {
     match /users/{userId}/{subcollection}/{docId} {
       allow read, write: if isAuthenticated();
     }
+
+    // Verification requests rules - essential for community lead verification
+    match /verification_requests/{requestId} {
+      // Allow authenticated users to create and read verification requests
+      allow read, write: if isAuthenticated();
+    }
   }
 }

@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { UserRole } from "@/contexts/AuthContext";
+import { WaitingScreen } from "./WaitingScreen";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -38,8 +39,11 @@ export function ProtectedRoute({
         if (userProfile.role === "student") {
           router.push("/student-dashboard");
         } else if (userProfile.role === "community_lead") {
+          // Community leads without verification stay on waiting screen
+          // They don't get redirected
           if (!userProfile.isVerified) {
-            router.push("/verification");
+            // Don't redirect unverified community leads
+            return;
           } else {
             router.push("/community-dashboard");
           }
@@ -49,15 +53,6 @@ export function ProtectedRoute({
           // Fallback if unknown role
           router.push("/login");
         }
-      }
-
-      // Additional check for community leads
-      if (
-        userProfile.role === "community_lead" &&
-        !userProfile.isVerified &&
-        pathname !== "/verification"
-      ) {
-        router.push("/verification");
       }
     }
   }, [
@@ -71,6 +66,16 @@ export function ProtectedRoute({
     pathname,
     requireAuth,
   ]);
+
+  // Show waiting screen for unverified community leads ONLY if they're not on the verification page
+  if (
+    isAuthenticated &&
+    userProfile?.role === "community_lead" &&
+    !userProfile.isVerified &&
+    pathname !== "/verification"
+  ) {
+    return <WaitingScreen />;
+  }
 
   // Show nothing while checking authentication to prevent flashing content
   if (

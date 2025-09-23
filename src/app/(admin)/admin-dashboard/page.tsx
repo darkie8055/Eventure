@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import {
   Shield,
   Users,
@@ -22,64 +23,178 @@ import {
   BarChart3,
   FileText,
 } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { 
+  collection, 
+  onSnapshot, 
+  doc, 
+  updateDoc, 
+  query, 
+  orderBy,
+  serverTimestamp,
+  getDoc,
+  writeBatch
+} from "firebase/firestore";
 
-// Mock data for community verification requests
-const mockVerificationRequests = [
-  {
-    id: "1",
-    communityName: "Tech Innovation Club",
-    leaderName: "John Smith",
-    leaderEmail: "john.smith@college.edu",
-    submittedAt: "2025-09-20T10:30:00Z",
-    status: "pending",
-    department: "Computer Science",
-    expectedMembers: "25-50",
-    facultyAdvisor: "Dr. Sarah Johnson",
-  },
-  {
-    id: "2",
-    communityName: "Environmental Awareness Society",
-    leaderName: "Emily Davis",
-    leaderEmail: "emily.davis@college.edu",
-    submittedAt: "2025-09-19T14:20:00Z",
-    status: "pending",
-    department: "Environmental Science",
-    expectedMembers: "50-100",
-    facultyAdvisor: "Dr. Michael Brown",
-  },
-  {
-    id: "3",
-    communityName: "Photography Club",
-    leaderName: "Alex Chen",
-    leaderEmail: "alex.chen@college.edu",
-    submittedAt: "2025-09-18T09:15:00Z",
-    status: "approved",
-    department: "Fine Arts",
-    expectedMembers: "10-25",
-    facultyAdvisor: "Prof. Lisa Wang",
-  },
-];
+interface VerificationRequest {
+  id: string;
+  communityName: string;
+  leaderName: string;
+  leaderEmail: string;
+  submittedAt: string;
+  status: "pending" | "approved" | "rejected";
+  department?: string;
+  expectedMembers?: string;
+  facultyAdvisor?: string;
+  [key: string]: any; // For additional fields
+}
 
 export default function AdminDashboardPage() {
   const { userProfile, signOut } = useAuth();
   const router = useRouter();
-  const [requests, setRequests] = useState(mockVerificationRequests);
+  const { toast } = useToast();
+  const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [selectedTab, setSelectedTab] = useState("pending");
+  const [loading, setLoading] = useState(true);
 
-  const handleApprove = (requestId: string) => {
-    setRequests(prev =>
-      prev.map(req =>
-        req.id === requestId ? { ...req, status: "approved" } : req
-      )
-    );
+  // Real-time listener for verification requests
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+
+    try {
+      const q = query(
+        collection(db, "verification_requests"),
+        orderBy("submittedAt", "desc")
+      );
+
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const requestsData: VerificationRequest[] = [];
+        snapshot.forEach((doc) => {
+          requestsData.push({
+            id: doc.id,
+            ...doc.data(),
+          } as VerificationRequest);
+        });
+        setRequests(requestsData);
+        setLoading(false);
+      }, (error) => {
+        console.error("Error fetching verification requests:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load verification requests",
+          variant: "destructive",
+        });
+        setLoading(false);
+      });
+    } catch (error) {
+      console.error("Error setting up verification requests listener:", error);
+      setLoading(false);
+    }
+
+    return () => {
+      if (unsubscribe) {
+        try {
+          unsubscribe();
+        } catch (error) {
+          console.error("Error unsubscribing from verification requests:", error);
+        }
+      }
+    };
+  }, [toast]);
+
+  const handleApprove = async (requestId: string, userEmail: string) => {
+    try {
+      const batch = writeBatch(db);
+      
+      // Update verification request status
+      const requestRef = doc(db, "verification_requests", requestId);
+      batch.update(requestRef, {
+        status: "approved",
+        approvedAt: serverTimestamp(),
+        approvedBy: userProfile?.email || "admin",
+      });
+
+      // Find and update the user's verification status
+      const usersRef = collection(db, "users");
+      const userQuery = query(usersRef);
+      const userSnapshot = await getDoc(doc(db, "users", userEmail));
+      
+      if (userSnapshot.exists()) {
+        const userRef = doc(db, "users", userEmail);
+        batch.update(userRef, {
+          isVerified: true,
+          verifiedAt: serverTimestamp(),
+          verifiedBy: userProfile?.email || "admin",
+        });
+      }
+
+      await batch.commit();
+
+      toast({
+        title: "Community Lead Approved",
+        description: "The community lead has been approved and can now access their dashboard.",
+      });
+      
+      // Update local state immediately for better UX
+      setRequests(prev =>
+        prev.map(req =>
+          req.id === requestId ? { ...req, status: "approved" as const } : req
+        )
+      );
+    } catch (error) {
+      console.error("Error approving request:", error);
+      toast({
+        title: "Error",
+        description: "Failed to approve the community lead. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleReject = (requestId: string) => {
-    setRequests(prev =>
-      prev.map(req =>
-        req.id === requestId ? { ...req, status: "rejected" } : req
-      )
-    );
+  const handleReject = async (requestId: string, userEmail: string) => {
+    try {
+      const batch = writeBatch(db);
+      
+      // Update verification request status
+      const requestRef = doc(db, "verification_requests", requestId);
+      batch.update(requestRef, {
+        status: "rejected",
+        rejectedAt: serverTimestamp(),
+        rejectedBy: userProfile?.email || "admin",
+      });
+
+      // Optionally update user status (keep them unverified)
+      const userSnapshot = await getDoc(doc(db, "users", userEmail));
+      if (userSnapshot.exists()) {
+        const userRef = doc(db, "users", userEmail);
+        batch.update(userRef, {
+          isVerified: false,
+          rejectedAt: serverTimestamp(),
+          rejectedBy: userProfile?.email || "admin",
+        });
+      }
+
+      await batch.commit();
+
+      toast({
+        title: "Community Lead Rejected",
+        description: "The community lead application has been rejected.",
+      });
+      
+      // Update local state immediately for better UX
+      setRequests(prev =>
+        prev.map(req =>
+          req.id === requestId ? { ...req, status: "rejected" as const } : req
+        )
+      );
+    } catch (error) {
+      console.error("Error rejecting request:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reject the community lead. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -205,7 +320,16 @@ export default function AdminDashboardPage() {
 
             <TabsContent value={selectedTab}>
               <div className="space-y-4">
-                {filteredRequests.length === 0 ? (
+                {loading ? (
+                  <Card className="card-elevated">
+                    <CardContent className="p-8 text-center">
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary"></div>
+                        <p className="text-muted-foreground">Loading verification requests...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : filteredRequests.length === 0 ? (
                   <Card className="card-elevated">
                     <CardContent className="p-8 text-center">
                       <p className="text-muted-foreground">
@@ -269,7 +393,7 @@ export default function AdminDashboardPage() {
                                 <Button
                                   size="sm"
                                   className="gap-2 bg-green-600 hover:bg-green-700"
-                                  onClick={() => handleApprove(request.id)}
+                                  onClick={() => handleApprove(request.id, request.userEmail || request.email)}
                                 >
                                   <CheckCircle className="w-4 h-4" />
                                   Approve
@@ -278,7 +402,7 @@ export default function AdminDashboardPage() {
                                   variant="destructive"
                                   size="sm"
                                   className="gap-2"
-                                  onClick={() => handleReject(request.id)}
+                                  onClick={() => handleReject(request.id, request.userEmail || request.email)}
                                 >
                                   <XCircle className="w-4 h-4" />
                                   Reject

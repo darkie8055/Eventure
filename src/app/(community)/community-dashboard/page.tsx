@@ -46,9 +46,20 @@ const CommunityDashboard = () => {
   const [loading, setLoading] = useState(true);
   const { user, userProfile, loading: authLoading } = useAuth();
 
+  // Mock leaderboard data - this would typically come from an API
+  const mockLeaderboard = [
+    { rank: 1, name: "Tech Innovation Club", events: 12, members: 245, registrations: 567, score: 892 },
+    { rank: 2, name: "Student Government", events: 8, members: 189, registrations: 423, score: 756 },
+    { rank: 3, name: "Drama Society", events: 15, members: 167, registrations: 389, score: 694 },
+    { rank: 4, name: "Sports Committee", events: 6, members: 234, registrations: 312, score: 623 },
+    { rank: 5, name: "Music Club", events: 9, members: 156, registrations: 267, score: 578 },
+  ];
+
   // Fetch community leader data
   useEffect(() => {
     if (!user || !userProfile || authLoading || userProfile.role !== 'community_lead') return;
+
+    let unsubscribe: (() => void) | null = null;
 
     const fetchCommunityData = async () => {
       try {
@@ -67,26 +78,35 @@ const CommunityDashboard = () => {
           limit(10)
         );
 
-        const unsubscribe = onSnapshot(eventsQuery, (snapshot) => {
+        unsubscribe = onSnapshot(eventsQuery, (snapshot) => {
           const fetchedEvents: any[] = [];
           snapshot.forEach((doc) => {
             fetchedEvents.push({ id: doc.id, ...doc.data() });
           });
           setEvents(fetchedEvents);
+          setLoading(false);
         }, (error) => {
           console.error('Error fetching community events:', error);
           setEvents([]);
+          setLoading(false);
         });
-
-        return () => unsubscribe();
       } catch (error) {
         console.error('Error fetching community data:', error);
-      } finally {
         setLoading(false);
       }
     };
 
     fetchCommunityData();
+
+    return () => {
+      if (unsubscribe) {
+        try {
+          unsubscribe();
+        } catch (error) {
+          console.error('Error unsubscribing from community events:', error);
+        }
+      }
+    };
   }, [user, userProfile, authLoading]);
 
   // Show loading state while auth or data is loading
@@ -220,7 +240,7 @@ const CommunityDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockEvents.map((event) => (
+                  {events.length > 0 ? events.slice(0, 5).map((event) => (
                     <div
                       key={event.id}
                       className="flex items-center justify-between p-4 border border-border rounded-lg"
@@ -241,12 +261,12 @@ const CommunityDashboard = () => {
                           </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{event.registrations} registrations</span>
-                          <span>{event.views} views</span>
-                          <span>{event.engagement}% engagement</span>
+                          <span>{event.registrations || 0} registrations</span>
+                          <span>{event.views || 0} views</span>
+                          <span>{event.engagement || 0}% engagement</span>
                         </div>
                         <Progress
-                          value={event.engagement}
+                          value={event.engagement || 0}
                           className="mt-2 h-2"
                         />
                       </div>
@@ -259,7 +279,19 @@ const CommunityDashboard = () => {
                         </Button>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-center py-8">
+                      <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">No events yet</h3>
+                      <p className="text-muted-foreground mb-4">Start creating events to see performance metrics here.</p>
+                      <Button asChild>
+                        <Link href="/events/create">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create Your First Event
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -325,7 +357,7 @@ const CommunityDashboard = () => {
             </div>
 
             <div className="grid gap-4">
-              {mockEvents.map((event) => (
+              {events.length > 0 ? events.map((event) => (
                 <Card key={event.id} className="card-elevated">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -341,7 +373,7 @@ const CommunityDashboard = () => {
                                 : "secondary"
                             }
                           >
-                            {event.status}
+                            {event.status || "draft"}
                           </Badge>
                         </div>
                         <p className="text-muted-foreground mb-4">
@@ -376,7 +408,21 @@ const CommunityDashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              )) : (
+                <Card className="card-elevated">
+                  <CardContent className="p-12 text-center">
+                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No events created yet</h3>
+                    <p className="text-muted-foreground mb-4">Start by creating your first community event.</p>
+                    <Button asChild>
+                      <Link href="/events/create">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Event
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 

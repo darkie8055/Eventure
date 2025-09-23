@@ -36,6 +36,8 @@ import { Eye, EyeOff, Mail, Lock, User, Phone, Building, Loader2 } from "lucide-
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/contexts/AuthContext";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 const studentSignupSchema = z
   .object({
@@ -222,16 +224,18 @@ export function SignupForm({ onSignup }: SignupFormProps) {
         isVerified: false, // Community leads need verification
       });
 
+      // Don't store verification request yet - this will be done after the verification form
+      
       // Callback if provided
       onSignup?.(data, "community_lead");
 
       toast({
-        title: "Community Lead application submitted!",
+        title: "Account created successfully!",
         description:
-          "Your application is under review. You'll receive an email once approved.",
+          "Please complete the verification form to submit your community lead application.",
       });
 
-      // Redirect to verification page
+      // Redirect to verification form to collect detailed information
       router.push("/verification");
     } catch (error: any) {
       console.error("Community lead signup error:", error);
