@@ -27,15 +27,34 @@ export function ProtectedRoute({
     // Skip if still loading authentication state
     if (loading) return;
 
+    // Debug logging for admin routing
+    console.log("ProtectedRoute Debug:", {
+      pathname,
+      isAuthenticated,
+      userRole: userProfile?.role,
+      allowedRoles,
+      loading
+    });
+
     if (requireAuth && !isAuthenticated) {
       // User is not authenticated but needs to be
+      console.log("Redirecting to login: not authenticated");
       router.push(`${redirectTo}?from=${encodeURIComponent(pathname)}`);
     } else if (isAuthenticated && userProfile) {
       // User is authenticated, check role-based access
       const hasAllowedRole = allowedRoles.some((role) => hasRole(role));
 
+      console.log("Role check:", {
+        hasAllowedRole,
+        userRole: userProfile.role,
+        allowedRoles,
+        pathname
+      });
+
       if (!hasAllowedRole) {
         // User doesn't have required role
+        console.log("User doesn't have required role, redirecting based on role:", userProfile.role);
+        
         if (userProfile.role === "student") {
           router.push("/student-dashboard");
         } else if (userProfile.role === "community_lead") {
@@ -43,16 +62,21 @@ export function ProtectedRoute({
           // They don't get redirected
           if (!userProfile.isVerified) {
             // Don't redirect unverified community leads
+            console.log("Unverified community lead, not redirecting");
             return;
           } else {
             router.push("/community-dashboard");
           }
         } else if (userProfile.role === "admin") {
+          console.log("Admin user, redirecting to admin dashboard");
           router.push("/admin-dashboard");
         } else {
           // Fallback if unknown role
+          console.log("Unknown role, redirecting to login");
           router.push("/login");
         }
+      } else {
+        console.log("User has allowed role, allowing access to:", pathname);
       }
     }
   }, [

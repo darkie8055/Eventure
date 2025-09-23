@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 // Secret access key that needs to be provided in URL
 const SECRET_ACCESS_KEY = "ev3ntur3-4dm1n-s3cr3t-k3y-2025";
@@ -24,10 +26,18 @@ export default function AdminLoginPage() {
   const [hasValidAccess, setHasValidAccess] = useState(false);
   const [adminCode, setAdminCode] = useState("");
 
-  const { signIn } = useAuth();
+  const { signIn, userProfile, isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+
+  // Check if user is already logged in as admin
+  useEffect(() => {
+    if (isAuthenticated && userProfile?.role === "admin") {
+      console.log("Admin already logged in, redirecting to dashboard");
+      router.push("/admin-dashboard");
+    }
+  }, [isAuthenticated, userProfile, router]);
 
   // Check for secret access key in URL or manual entry
   useEffect(() => {
@@ -60,6 +70,35 @@ export default function AdminLoginPage() {
     }
   };
 
+  // Development utility to set admin role
+  const setCurrentUserAsAdmin = async () => {
+    if (userProfile && isAuthenticated) {
+      try {
+        const adminProfile = {
+          ...userProfile,
+          role: "admin" as const
+        };
+        
+        await setDoc(doc(db, "users", userProfile.uid), adminProfile);
+        
+        toast({
+          title: "Role Updated",
+          description: "Current user role set to admin. Please refresh the page.",
+        });
+        
+        // Refresh the page to reload the profile
+        window.location.reload();
+      } catch (error) {
+        console.error("Error setting admin role:", error);
+        toast({
+          title: "Error",
+          description: "Failed to set admin role. Check console for details.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -68,12 +107,33 @@ export default function AdminLoginPage() {
     try {
       await signIn(email, password);
       
-      toast({
-        title: "Admin login successful!",
-        description: "Welcome to the admin dashboard.",
-      });
-
-      router.push("/admin-dashboard");
+      console.log("Admin login successful, waiting for profile to load...");
+      
+      // Wait for user profile to be loaded and check role
+      const checkProfileAndRedirect = () => {
+        if (userProfile) {
+          console.log("User profile loaded:", userProfile);
+          if (userProfile.role === "admin") {
+            console.log("Admin role confirmed, redirecting to admin dashboard");
+            toast({
+              title: "Admin login successful!",
+              description: "Welcome to the admin dashboard.",
+            });
+            router.push("/admin-dashboard");
+          } else {
+            console.log("User role is not admin:", userProfile.role);
+            setError(`Access denied. Your account role is: ${userProfile.role}. Admin access required.`);
+          }
+          setIsLoading(false);
+        } else {
+          // Profile not loaded yet, check again in 200ms
+          setTimeout(checkProfileAndRedirect, 200);
+        }
+      };
+      
+      // Start checking for profile
+      setTimeout(checkProfileAndRedirect, 500);
+      
     } catch (error: any) {
       console.error("Admin login error:", error);
       setError(
@@ -81,7 +141,6 @@ export default function AdminLoginPage() {
           ? "Invalid admin credentials. Please check your email and password."
           : "Login failed. Please try again."
       );
-    } finally {
       setIsLoading(false);
     }
   };
@@ -248,6 +307,23 @@ export default function AdminLoginPage() {
               )}
             </Button>
           </form>
+
+          {/* Development utility */}
+          {isAuthenticated && userProfile && userProfile.role !== "admin" && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-xs text-yellow-800 mb-2">
+                Development Mode: Current user role is &quot;{userProfile.role}&quot;
+              </p>
+              <Button
+                onClick={setCurrentUserAsAdmin}
+                variant="outline"
+                size="sm"
+                className="w-full text-xs"
+              >
+                Set Current User as Admin (Dev Only)
+              </Button>
+            </div>
+          )}
 
           <div className="mt-6 text-center">
             <Button

@@ -29,13 +29,17 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const { user } = useAuth();
 
+  // Temporarily disable real-time notifications to prevent Firestore sync issues
+  const ENABLE_NOTIFICATIONS = false;
+
   useEffect(() => {
-    if (!user) {
+    if (!user || !ENABLE_NOTIFICATIONS) {
       setNotifications([]);
+      setUnreadCount(0);
       return;
     }
 
-    // Set up real-time listener for user's notifications
+    // Set up real-time listener for user's notifications with error handling
     const notificationsRef = collection(db, 'notifications');
     const q = query(
       notificationsRef,
@@ -43,25 +47,37 @@ export function NotificationBell() {
       orderBy('timestamp', 'desc')
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedNotifications: Notification[] = [];
-      snapshot.forEach((doc) => {
-        fetchedNotifications.push({ id: doc.id, ...doc.data() } as Notification);
-      });
-      setNotifications(fetchedNotifications);
-    }, (error) => {
-      console.error('Error fetching notifications:', error);
-      // Fallback to empty array on error
-      setNotifications([]);
-    });
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        try {
+          const fetchedNotifications: Notification[] = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data) {
+              fetchedNotifications.push({ 
+                id: doc.id, 
+                ...data 
+              } as Notification);
+            }
+          });
+          
+          setNotifications(fetchedNotifications);
+          setUnreadCount(fetchedNotifications.filter(n => !n.read).length);
+        } catch (error) {
+          console.error("Error processing notifications:", error);
+          // Don't update state if there's an error processing
+        }
+      },
+      (error) => {
+        console.error("Notifications listener error:", error);
+        // On error, fall back to empty state
+        setNotifications([]);
+        setUnreadCount(0);
+      }
+    );
 
     return () => unsubscribe();
-  }, [user]);
-
-  useEffect(() => {
-    const count = notifications.filter(n => !n.read).length;
-    setUnreadCount(count);
-  }, [notifications]);
+  }, [user, ENABLE_NOTIFICATIONS]);
 
   const markAsRead = async (notificationId: string) => {
     if (!user) return;

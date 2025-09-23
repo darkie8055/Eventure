@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { FirestoreErrorBoundary } from "@/components/FirestoreErrorBoundary";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Calendar,
@@ -119,7 +120,9 @@ export function Navigation() {
                   );
                 })}
 
-                <NotificationBell />
+                <FirestoreErrorBoundary fallback={<div className="p-2 text-muted-foreground text-xs">Notifications temporarily unavailable</div>}>
+                  <NotificationBell />
+                </FirestoreErrorBoundary>
               </>
             )}
           </div>

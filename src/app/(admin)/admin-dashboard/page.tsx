@@ -50,7 +50,7 @@ interface VerificationRequest {
 }
 
 export default function AdminDashboardPage() {
-  const { userProfile, signOut } = useAuth();
+  const { userProfile, signOut, hasRole, isAuthenticated } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
@@ -249,6 +249,22 @@ export default function AdminDashboardPage() {
               Manage community verification requests and system administration
             </p>
           </div>
+
+          {/* Debug Info - Remove in production */}
+          <Card className="mb-6 border-yellow-200 bg-yellow-50">
+            <CardHeader>
+              <CardTitle className="text-sm text-yellow-800">Debug Info (Admin Access)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm space-y-1">
+                <p><strong>User Email:</strong> {userProfile?.email || "Not loaded"}</p>
+                <p><strong>User Role:</strong> {userProfile?.role || "Not loaded"}</p>
+                <p><strong>Is Admin:</strong> {hasRole("admin") ? "Yes" : "No"}</p>
+                <p><strong>Auth State:</strong> {isAuthenticated ? "Authenticated" : "Not authenticated"}</p>
+                <p><strong>Profile Loaded:</strong> {userProfile ? "Yes" : "No"}</p>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
