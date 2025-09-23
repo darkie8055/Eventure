@@ -61,6 +61,8 @@ export function Navigation() {
     { path: "/admin/users", label: "User Management", icon: Users },
     { path: "/admin/communities", label: "Communities", icon: Users },
     { path: "/admin/reports", label: "Reports", icon: FileText },
+    { path: "/admin/logs", label: "System Logs", icon: FileText },
+    { path: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
   // Get the appropriate nav items based on user role and verification status
