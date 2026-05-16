@@ -219,7 +219,7 @@ export default function ReportsAnalyticsPage() {
 
         // Load Communities Data
         const communitiesRef = collection(db, "communities");
-        const communitiesQuery = dateFilter === "all" ? query(communitiesRef) : query(communitiesRef, dateQuery);
+        const communitiesQuery = dateQuery ? query(communitiesRef, dateQuery) : query(communitiesRef);
         const communitiesSnapshot = await getDocs(communitiesQuery);
         
         let communityStats = {
@@ -279,7 +279,7 @@ export default function ReportsAnalyticsPage() {
 
         try {
           const eventsRef = collection(db, "events");
-          const eventsQuery = dateFilter === "all" ? query(eventsRef) : query(eventsRef, dateQuery);
+          const eventsQuery = dateQuery ? query(eventsRef, dateQuery) : query(eventsRef);
           const eventsSnapshot = await getDocs(eventsQuery);
           
           let popularEventsData: PopularEvent[] = [];

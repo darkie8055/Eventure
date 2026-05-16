@@ -304,7 +304,7 @@ const CommunityDashboard = () => {
                   Monthly Goals
                 </CardTitle>
                 <CardDescription>
-                  Track your community's progress this month
+                  Track your community&apos;s progress this month
                 </CardDescription>
               </CardHeader>
               <CardContent>

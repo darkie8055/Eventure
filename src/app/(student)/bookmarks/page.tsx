@@ -139,7 +139,7 @@ export default function Bookmarks() {
             <h1 className="text-4xl font-bold gradient-text">My Bookmarks</h1>
           </div>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Keep track of events you're interested in. Never miss out on the events that matter to you.
+            Keep track of events you&apos;re interested in. Never miss out on the events that matter to you.
           </p>
         </div>
 
@@ -192,7 +192,7 @@ export default function Bookmarks() {
             <span className="text-sm text-muted-foreground">Active filters:</span>
             {searchQuery && (
               <Badge variant="secondary" className="gap-1">
-                Search: "{searchQuery}"
+                Search: &ldquo;{searchQuery}&rdquo;
                 <X 
                   className="h-3 w-3 cursor-pointer" 
                   onClick={() => setSearchQuery('')}

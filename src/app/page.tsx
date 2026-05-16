@@ -82,7 +82,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Why Choose Eventure?</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              We're more than just an event platform - we're your gateway to an enriched academic experience.
+              We&apos;re more than just an event platform - we&apos;re your gateway to an enriched academic experience.
             </p>
           </div>
           
@@ -168,7 +168,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Trending Events</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Don't miss out on these popular upcoming events in your academic community.
+              Don&apos;t miss out on these popular upcoming events in your academic community.
             </p>
           </div>
           
@@ -272,7 +272,7 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-muted-foreground mb-4">
-                "Eventure transformed my college experience. I've made so many meaningful connections and discovered events I never would have known about."
+                &ldquo;Eventure transformed my college experience. I&apos;ve made so many meaningful connections and discovered events I never would have known about.&rdquo;
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -292,7 +292,7 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-muted-foreground mb-4">
-                "The community features are incredible. I found my study group through Eventure and we've been supporting each other ever since."
+                &ldquo;The community features are incredible. I found my study group through Eventure and we&apos;ve been supporting each other ever since.&rdquo;
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -312,7 +312,7 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-muted-foreground mb-4">
-                "As an international student, Eventure helped me integrate into campus life quickly. The event recommendations are spot on!"
+                &ldquo;As an international student, Eventure helped me integrate into campus life quickly. The event recommendations are spot on!&rdquo;
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { db } from "@/lib/firebase";
 // Secret access key that needs to be provided in URL
 const SECRET_ACCESS_KEY = "ev3ntur3-4dm1n-s3cr3t-k3y-2025";
 
-export default function AdminLoginPage() {
+function AdminLoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [accessKey, setAccessKey] = useState("");
@@ -338,5 +338,13 @@ export default function AdminLoginPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <AdminLoginContent />
+    </Suspense>
   );
 }

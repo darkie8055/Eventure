@@ -180,7 +180,7 @@ export default function StudentCommunityChat({ params }: { params: Promise<{ id:
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation user={mockUser} />
+      <Navigation />
       
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Sidebar */}
